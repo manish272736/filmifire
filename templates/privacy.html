@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy — FilmiFire{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="static-page">
+
+    <div class="static-header">
+      <h1>Privacy Policy</h1>
+      <p>Last updated: January 2025</p>
+    </div>
+
+    <div class="static-body">
+
+      <p>At FilmiFire, accessible from filmifire.com, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by FilmiFire and how we use it.</p>
+
+      <h2>Information We Collect</h2>
+      <p>FilmiFire is a read-only news site. We do not require users to create accounts or provide personal information to access our content. The only information we may collect is:</p>
+      <ul>
+        <li><strong>Usage data</strong> — Pages visited, time spent, browser type (collected anonymously via analytics)</li>
+        <li><strong>Contact form data</strong> — Name, email, and message when you voluntarily contact us</li>
+        <li><strong>Cookies</strong> — Small files placed on your device by Google Analytics and advertising partners</li>
+      </ul>
+
+      <h2>Google Adsense & Advertising</h2>
+      <p>FilmiFire may use Google AdSense to display advertisements. Google AdSense uses cookies to serve ads based on your prior visits to this website and other sites. Google's use of advertising cookies enables it to serve ads based on your visit to our site and/or other sites on the Internet. You may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" style="color:var(--accent)">Google Ads Settings</a>.</p>
+
+      <h2>Third-Party Services</h2>
+      <p>FilmiFire may use the following third-party services:</p>
+      <ul>
+        <li><strong>Google Analytics</strong> — Website traffic analysis</li>
+        <li><strong>Google AdSense</strong> — Display advertising</li>
+        <li><strong>Cloudinary</strong> — Image hosting and delivery</li>
+      </ul>
+
+      <h2>Cookies</h2>
+      <p>FilmiFire uses cookies to improve your experience. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you do not accept cookies, some parts of our website may not function properly.</p>
+
+      <h2>Links to Other Websites</h2>
+      <p>Our website may contain links to other websites. We have no control over the content and practices of those sites and cannot accept responsibility for their respective privacy policies.</p>
+
+      <h2>Children's Privacy</h2>
+      <p>FilmiFire does not knowingly collect any personal identifiable information from children under the age of 13.</p>
+
+      <h2>Changes to This Policy</h2>
+      <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page with an updated date.</p>
+
+      <h2>Contact Us</h2>
+      <p>If you have any questions about this Privacy Policy, please <a href="{{ url_for('main.contact') }}" style="color:var(--accent)">contact us</a>.</p>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

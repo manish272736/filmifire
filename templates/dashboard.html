@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — FilmiFire Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .admin-wrap { max-width:1100px; margin:0 auto; padding:32px 24px; }
+    .admin-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:12px; }
+    .admin-logo { font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--accent); }
+    .admin-logo span { color:var(--muted); font-size:14px; font-family:var(--font-body); margin-left:8px; }
+    .admin-actions { display:flex; gap:10px; align-items:center; }
+    .btn { padding:8px 18px; border-radius:var(--radius); font-size:13px; font-weight:500; cursor:pointer; border:none; font-family:var(--font-body); transition:opacity 0.15s; text-decoration:none; display:inline-block; }
+    .btn:hover { opacity:0.85; }
+    .btn-primary { background:var(--accent); color:#000; }
+    .btn-ghost { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
+    .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+    .stat-val { font-family:var(--font-display); font-size:32px; font-weight:800; color:var(--accent); }
+    .stat-label { font-size:12px; color:var(--muted); margin-top:4px; text-transform:uppercase; letter-spacing:0.07em; }
+    .articles-table { width:100%; border-collapse:collapse; }
+    .articles-table th { font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); text-align:left; padding:8px 12px; border-bottom:1px solid var(--border); }
+    .articles-table td { padding:12px; border-bottom:1px solid var(--border); font-size:14px; vertical-align:middle; }
+    .articles-table tr:hover td { background:var(--surface2); }
+    .status-pub { color:#27ae60; font-size:11px; font-weight:500; text-transform:uppercase; }
+    .status-draft { color:var(--muted); font-size:11px; text-transform:uppercase; }
+    .act-btn { font-size:12px; color:var(--muted); padding:4px 10px; border:1px solid var(--border); border-radius:3px; cursor:pointer; background:none; font-family:var(--font-body); transition:color 0.15s, border-color 0.15s; text-decoration:none; display:inline-block; margin-right:4px; }
+    .act-btn:hover { color:var(--accent); border-color:var(--accent); }
+    .act-btn.del:hover { color:#e74c3c; border-color:#e74c3c; }
+    @media(max-width:700px){ .stats-row{grid-template-columns:repeat(2,1fr);} }
+  </style>
+</head>
+<body>
+<div class="admin-wrap">
+
+  <div class="admin-header">
+    <div>
+      <div class="admin-logo">FilmiFire <span>Admin</span></div>
+    </div>
+    <div class="admin-actions">
+      <a href="{{ url_for('main.index') }}" class="btn btn-ghost" target="_blank">View site →</a>
+      <a href="{{ url_for('admin.new_article') }}" class="btn btn-primary">+ New Article</a>
+      <a href="{{ url_for('admin.logout') }}" class="btn btn-ghost">Logout</a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val">{{ stats.total }}</div>
+      <div class="stat-label">Total articles</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">{{ stats.published }}</div>
+      <div class="stat-label">Published</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">{{ stats.drafts }}</div>
+      <div class="stat-label">Drafts</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">{{ stats.views }}</div>
+      <div class="stat-label">Total views</div>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;font-size:13px;color:{% if cat == 'error' %}#e74c3c{% else %}var(--accent){% endif %}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Articles table -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:500">
+      All Articles
+    </div>
+    <div style="overflow-x:auto">
+      <table class="articles-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Views</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for art in articles %}
+          <tr>
+            <td style="max-width:320px">
+              <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px">
+                {{ art.title }}
+              </div>
+            </td>
+            <td>
+              <span class="badge badge-{{ art.category }}" style="font-size:10px">{{ art.category }}</span>
+            </td>
+            <td>
+              {% if art.status == 'published' and not art.get('archived') %}
+                <span class="status-pub">● Published</span>
+              {% elif art.get('archived') %}
+                <span style="color:#e67e22;font-size:11px;text-transform:uppercase">⬤ Archived</span>
+              {% else %}
+                <span class="status-draft">○ Draft</span>
+              {% endif %}
+            </td>
+            <td style="color:var(--muted)">{{ art.views or 0 }}</td>
+            <td style="color:var(--muted);font-family:var(--font-mono);font-size:12px">
+              {{ art.published_at.strftime('%d %b %Y') if art.published_at else '—' }}
+            </td>
+            <td>
+              <a href="{{ url_for('admin.edit_article', article_id=art._id) }}" class="act-btn">Edit</a>
+              <a href="{{ url_for('main.article', slug=art.slug) }}" class="act-btn" target="_blank">View</a>
+              <form method="POST" action="{{ url_for('admin.archive_article', article_id=art._id) }}"
+                    style="display:inline">
+                <button type="submit" class="act-btn">
+                  {{ 'Restore' if art.get('archived') else 'Archive' }}
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('admin.delete_article', article_id=art._id) }}"
+                    style="display:inline"
+                    onsubmit="return confirm('Permanently delete this article?')">
+                <button type="submit" class="act-btn del">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align:center;color:var(--muted);padding:40px">
+              No articles yet. <a href="{{ url_for('admin.new_article') }}" style="color:var(--accent)">Write one →</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

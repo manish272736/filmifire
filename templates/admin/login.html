@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — FilmiFire</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    .login-box {
+      width: 100%; max-width: 380px; padding: 40px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    }
+    .login-logo { font-family:var(--font-display); font-size:28px; font-weight:800; color:var(--accent); margin-bottom:28px; }
+    .login-logo span { color:var(--text); }
+    .field { margin-bottom:16px; }
+    .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.07em; }
+    .field input {
+      width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius);
+      padding:10px 14px; color:var(--text); font-family:var(--font-body); font-size:14px; outline:none;
+    }
+    .field input:focus { border-color:rgba(255,255,255,0.25); }
+    .btn-login {
+      width:100%; background:var(--accent); color:#000; border:none; padding:12px;
+      font-family:var(--font-body); font-size:15px; font-weight:500; border-radius:var(--radius);
+      cursor:pointer; margin-top:8px; transition:opacity 0.15s;
+    }
+    .btn-login:hover { opacity:0.85; }
+    .error { color:#e74c3c; font-size:13px; margin-bottom:14px; }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <div class="login-logo">Filmi<span>Fire</span></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px">Admin Panel</div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="error">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="email" required autofocus>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" name="password" required>
+      </div>
+      <button type="submit" class="btn-login">Login</button>
+    </form>
+  </div>
+</body>
+</html>

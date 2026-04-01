@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} — FilmiFire{% endblock %}
+{% block meta_desc %}{{ article.excerpt or article.title }}{% endblock %}
+{% block og_title %}{{ article.title }}{% endblock %}
+{% block og_desc %}{{ article.excerpt or '' }}{% endblock %}
+{% block og_image %}{{ article.cover_img or '' }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="article-layout">
+
+    <!-- Main content -->
+    <article>
+
+      {% if article.cover_img %}
+        <img class="article-cover" src="{{ article.cover_img }}" alt="{{ article.title }}">
+      {% endif %}
+
+      <div class="article-header">
+        <span class="badge badge-{{ article.category }}">{{ article.category | title }}</span>
+        <h1 class="article-title">{{ article.title }}</h1>
+        <div class="article-meta">
+          {% if article.get('author') %}
+            <span style="color:var(--text);font-weight:500">By {{ article.author }}</span>
+          {% endif %}
+          <span title="{{ article.published_at | fmtdate if article.published_at else '' }}">
+            {{ article.published_at | reltime if article.published_at else 'Draft' }}
+          </span>
+          <span>{{ article.views or 0 }} views</span>
+          {% if article.tags %}
+            <span>{{ article.tags | join(', ') }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="article-body">
+        {{ article.body_html | safe }}
+      </div>
+
+      {% if article.tags %}
+      <div class="tags-row">
+        {% for tag in article.tags %}
+          <a href="{{ url_for('main.tag', tag=tag) }}" class="tag-pill">#{{ tag }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </article>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+      {% if article.category == 'news' %}
+        <!-- NEWS ARTICLE: show only Latest News feed -->
+        {% if latest_news %}
+        <div class="news-feed-block">
+          <div class="news-feed-header">
+            <span>Latest News</span>
+            <a href="{{ url_for('main.category', slug='news') }}">See all →</a>
+          </div>
+          <div class="news-feed-list">
+            {% for art in latest_news %}
+              {% if art.slug != article.slug %}
+              <a href="{{ url_for('main.article', slug=art.slug) }}" class="news-feed-item">
+                {% if art.cover_img %}
+                  <img src="{{ art.cover_img }}" alt="" class="news-feed-thumb" loading="lazy">
+                {% else %}
+                  <div class="news-feed-thumb news-feed-thumb-placeholder">🎬</div>
+                {% endif %}
+                <div class="news-feed-title">{{ art.title }}</div>
+              </a>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+      {% else %}
+        <!-- NON-NEWS ARTICLE: show Related Articles + Latest News -->
+        {% if related %}
+        <div class="sidebar-block">
+          <div class="sidebar-title">Related Articles</div>
+          {% for art in related %}
+            <a href="{{ url_for('main.article', slug=art.slug) }}" class="sidebar-article">
+              {% if art.cover_img %}
+                <img src="{{ art.cover_img }}" class="sidebar-thumb" alt="" loading="lazy">
+              {% else %}
+                <div class="sidebar-thumb" style="background:var(--surface2);border-radius:3px"></div>
+              {% endif %}
+              <div class="sidebar-art-title">{{ art.title }}</div>
+            </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if latest_news %}
+        <div class="news-feed-block" style="margin-top:{% if related %}20px{% else %}0{% endif %}">
+          <div class="news-feed-header">
+            <span>Latest News</span>
+            <a href="{{ url_for('main.category', slug='news') }}">See all →</a>
+          </div>
+          <div class="news-feed-list">
+            {% for art in latest_news %}
+            <a href="{{ url_for('main.article', slug=art.slug) }}" class="news-feed-item">
+              {% if art.cover_img %}
+                <img src="{{ art.cover_img }}" alt="" class="news-feed-thumb" loading="lazy">
+              {% else %}
+                <div class="news-feed-thumb news-feed-thumb-placeholder">🎬</div>
+              {% endif %}
+              <div class="news-feed-title">{{ art.title }}</div>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+      {% endif %}
+
+    </aside>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Instagram embed -->
+<script async src="//www.instagram.com/embed.js"></script>
+<!-- Twitter/X embed -->
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+{% endblock %}

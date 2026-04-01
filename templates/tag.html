@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}#{{ tag }} Articles — FilmiFire{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="cat-header">
+    <span class="badge" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)">#{{ tag }}</span>
+    <h1 style="margin-top:12px">{{ tag }}</h1>
+    <p>All articles tagged with "{{ tag }}"</p>
+  </div>
+
+  {% if articles %}
+    <div class="cards-grid">
+      {% for art in articles %}
+      <a href="{{ url_for('main.article', slug=art.slug) }}"
+         class="card fade-up fade-up-{{ loop.index % 4 }}">
+        <div class="card-thumb">
+          {% if art.cover_img %}
+            <img src="{{ art.cover_img }}" alt="{{ art.title }}" loading="lazy">
+          {% else %}
+            <div class="card-thumb-placeholder">🎬</div>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div class="card-badge">
+            <span class="badge badge-{{ art.category }}">{{ art.category | title }}</span>
+          </div>
+          <div class="card-title">{{ art.title }}</div>
+          {% if art.excerpt %}
+            <div class="card-excerpt">{{ art.excerpt }}</div>
+          {% endif %}
+          <div class="card-meta">
+            {{ art.published_at | reltime if art.published_at else "" }}
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+      {% if page > 1 %}
+        <a href="?page={{ page - 1 }}" class="page-btn">← Prev</a>
+      {% endif %}
+      {% for p in range(1, total_pages + 1) %}
+        <a href="?page={{ p }}" class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+      {% endfor %}
+      {% if page < total_pages %}
+        <a href="?page={{ page + 1 }}" class="page-btn">Next →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  {% else %}
+    <div style="color:var(--muted);padding:60px 0;text-align:center;font-size:16px">
+      No articles found for this tag.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Search{% if query %}: {{ query }}{% endif %} — FilmiFire{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="search-header">
+    <h1>{% if query %}Results for "{{ query }}"{% else %}Search{% endif %}</h1>
+    {% if query %}
+      <p style="color:var(--muted)">{{ results | length }} article{{ 's' if results | length != 1 }}</p>
+    {% endif %}
+    <form action="{{ url_for('main.search') }}" method="GET" class="search-form">
+      <input type="text" name="q" placeholder="Search movies, records, box office…"
+             value="{{ query }}" autofocus>
+      <button type="submit">Search</button>
+    </form>
+  </div>
+
+  {% if results %}
+    <div class="cards-grid" style="margin-top:32px">
+      {% for art in results %}
+      <a href="{{ url_for('main.article', slug=art.slug) }}"
+         class="card fade-up fade-up-{{ loop.index % 4 }}">
+        <div class="card-thumb">
+          {% if art.cover_img %}
+            <img src="{{ art.cover_img }}" alt="{{ art.title }}" loading="lazy">
+          {% else %}
+            <div class="card-thumb-placeholder">🎬</div>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div class="card-badge">
+            <span class="badge badge-{{ art.category }}">{{ art.category | title }}</span>
+          </div>
+          <div class="card-title">{{ art.title }}</div>
+          {% if art.excerpt %}
+            <div class="card-excerpt">{{ art.excerpt }}</div>
+          {% endif %}
+          <div class="card-meta">
+            {{ art.published_at | reltime if art.published_at else "" }}
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  {% elif query %}
+    <div style="color:var(--muted);padding:60px 0;text-align:center;font-size:16px">
+      No articles found for "{{ query }}". Try different keywords.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

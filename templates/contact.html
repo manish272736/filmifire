@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Contact Us — FilmiFire{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="static-page">
+
+    <div class="static-header">
+      <h1>Contact Us</h1>
+      <p>We'd love to hear from you</p>
+    </div>
+
+    <div class="static-body">
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+          <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);
+                      border-radius:var(--radius);margin-bottom:20px;font-size:14px;
+                      color:{% if cat == 'error' %}#e74c3c{% else %}var(--accent){% endif %}">
+            {{ msg }}
+          </div>
+        {% endfor %}
+      {% endwith %}
+
+      <h2>Get in Touch</h2>
+      <p>Whether you have a tip about a box office story, want to report an error, or are interested in advertising on FilmiFire — we want to hear from you.</p>
+
+      <div class="contact-grid">
+        <div class="contact-form-wrap">
+          <form method="POST" action="{{ url_for('main.contact') }}">
+            <div class="contact-field">
+              <label>Your Name</label>
+              <input type="text" name="name" placeholder="Enter your name" required>
+            </div>
+            <div class="contact-field">
+              <label>Email Address</label>
+              <input type="email" name="email" placeholder="your@email.com" required>
+            </div>
+            <div class="contact-field">
+              <label>Subject</label>
+              <select name="subject">
+                <option value="tip">News Tip / Story Suggestion</option>
+                <option value="correction">Correction / Error Report</option>
+                <option value="advertise">Advertising Inquiry</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="contact-field">
+              <label>Message</label>
+              <textarea name="message" rows="5" placeholder="Write your message here…" required></textarea>
+            </div>
+            <button type="submit" class="contact-submit">Send Message</button>
+          </form>
+        </div>
+
+        <div class="contact-info">
+          <div class="contact-info-block">
+            <div class="contact-info-title">Follow Us</div>
+            <p style="font-size:13px;color:var(--muted);line-height:1.6">
+              Stay updated with the latest box office news by following us on social media.
+              Our pages are being set up — links coming soon.
+            </p>
+            <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+              <a href="#" class="social-btn-lg">Facebook</a>
+              <a href="#" class="social-btn-lg">Instagram</a>
+              <a href="#" class="social-btn-lg">Twitter / X</a>
+              <a href="#" class="social-btn-lg">Telegram</a>
+            </div>
+          </div>
+
+          <div class="contact-info-block" style="margin-top:24px">
+            <div class="contact-info-title">Response Time</div>
+            <p style="font-size:13px;color:var(--muted);line-height:1.6">
+              We typically respond to all messages within <strong style="color:var(--text)">24–48 hours</strong>.
+              For urgent corrections, please mention "URGENT" in your subject line.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

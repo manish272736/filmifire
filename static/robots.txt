@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /admin/login
+Disallow: /admin/setup
+
+Sitemap: https://www.filmifire.com/sitemap.xml
