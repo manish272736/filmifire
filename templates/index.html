@@ -369,9 +369,14 @@
   // Touch swipe support
   let touchStartX = 0;
   let touchEndX = 0;
+
+  const wrap = document.getElementById('carousel');
   if (wrap) {
+    wrap.addEventListener('mouseenter', pauseTimer);
+    wrap.addEventListener('mouseleave', resumeTimer);
     wrap.addEventListener('touchstart', function(e) {
       touchStartX = e.changedTouches[0].screenX;
+      pauseTimer();
     }, { passive: true });
     wrap.addEventListener('touchend', function(e) {
       touchEndX = e.changedTouches[0].screenX;
@@ -379,19 +384,23 @@
       if (Math.abs(diff) > 40) {
         if (diff > 0) { goto(current+1); }
         else { goto(current-1); }
-        startTimer(interval);
       }
+      resumeTimer();
     }, { passive: true });
   }
 
-  const wrap = document.getElementById('carousel');
-  if (wrap) {
-    wrap.addEventListener('mouseenter', pauseTimer);
-    wrap.addEventListener('mouseleave', resumeTimer);
-  }
-
-  goto(0);
-  startTimer(interval);
+  // Delay init so browser has laid out the track fully
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    track.style.transition = 'none';
+    track.style.transform = 'translateX(0%)';
+    slides[0].classList.add('active');
+    dots[0] && dots[0].classList.add('active');
+    setTimeout(() => {
+      track.style.transition = '';
+      startProgress(interval);
+      startTimer(interval);
+    }, 50);
+  }));
 })();
 </script>
 {% endblock %}

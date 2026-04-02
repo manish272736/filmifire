@@ -134,6 +134,20 @@
       background: #fff;
       transform: scale(1.3);
     }
+    /* Mobile ticker fixes */
+    @media (max-width: 600px) {
+      .ticker-dots { display: none; }
+      .ticker-nav { display: none; }
+      .ticker-label {
+        padding: 0 10px;
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        gap: 5px;
+      }
+      .ticker-label svg { display: none; }
+      .ticker-slide { padding: 0 10px; }
+      .ticker-slide a { font-size: 12px; }
+    }
 
     /* ── Autocomplete ─────────────────────────────────────────────────── */
     .search-wrap { position: relative; flex-shrink: 0; }
@@ -472,7 +486,6 @@
           <a href="{{ url_for('main.about') }}" class="footer-link">About Us</a>
           <a href="{{ url_for('main.contact') }}" class="footer-link">Contact Us</a>
           <a href="{{ url_for('main.privacy') }}" class="footer-link">Privacy Policy</a>
-          <a href="{{ url_for('main.sitemap') }}" class="footer-link">Sitemap</a>
         </div>
       </div>
     </div>
