@@ -79,7 +79,7 @@ def index():
     photo_articles = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "category": "photos"},
         sort=[("published_at", -1)],
-        limit=4
+        limit=6
     ))
     return render_template("index.html", latest=latest, trending=trending, latest_news=latest_news, slider_articles=slider_articles, photo_articles=photo_articles)
 

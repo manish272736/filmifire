@@ -148,7 +148,8 @@ img { display: block; max-width: 100%; }
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 6px 14px;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
 }
 .nav-search input {
   background: none;
@@ -158,6 +159,7 @@ img { display: block; max-width: 100%; }
   font-family: var(--font-body);
   font-size: 13px;
   width: 160px;
+  min-width: 0;
 }
 .nav-search input::placeholder { color: var(--muted); }
 .nav-search svg { color: var(--muted); flex-shrink: 0; }
@@ -480,30 +482,22 @@ img { display: block; max-width: 100%; }
 .article-body table {
   width: 100%;
   border-collapse: collapse;
-  margin: 24px 0;
+  margin-bottom: 24px;
   font-size: 15px;
-  table-layout: auto;
-  display: table;
 }
-.article-body th,
-.article-body td {
+.article-body th, .article-body td {
   padding: 10px 14px;
   border: 1px solid var(--border);
   text-align: left;
-  vertical-align: top;
-  min-width: 80px;
 }
 .article-body th {
   background: var(--surface2);
-  font-weight: 600;
-  color: var(--muted);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  white-space: nowrap;
+  font-weight: 500;
+  color: var(--accent);
+  font-size: 13px;
+  letter-spacing: 0.05em;
 }
-.article-body tr:nth-child(even) td { background: var(--surface); }
-.article-body tr:hover td { background: var(--surface2); transition: background 0.1s; }
+.article-body tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
 
 /* Tags */
 .tags-row {
@@ -1080,13 +1074,19 @@ img { display: block; max-width: 100%; }
 }
 @media (max-width: 600px) {
   .cards-grid { grid-template-columns: 1fr; }
-  .navbar-inner { gap: 16px; }
+  .navbar-inner { gap: 8px; padding: 0 12px; }
   .nav-links { display: none; }
-  .nav-search input { width: 110px; }
+  .nav-search { padding: 5px 10px; }
+  .nav-search input { width: 80px; font-size: 12px; }
   .hero { height: 320px; }
   .hero-content { padding: 20px; }
   .article-layout { padding: 24px 0 60px; }
+  /* Hide articles 7-9 on homepage mobile */
+  .home-cards-grid .card:nth-child(n+7) { display: none; }
 }
+
+/* Prevent horizontal scroll on all screens */
+html, body { max-width: 100%; overflow-x: hidden; }
 
 /* ── Animations ──────────────────────────────────────────────────────────── */
 @keyframes fadeUp {

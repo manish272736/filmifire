@@ -119,10 +119,22 @@
 }
 @media(max-width:900px){
   .carousel-slide { height: 280px; }
-  .carousel-btn { display: none; }
+  .carousel-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+    background: rgba(0,0,0,0.45);
+  }
+  .carousel-btn-prev { left: 6px; }
+  .carousel-btn-next { right: 6px; }
 }
 @media(max-width:600px){
   .carousel-slide { height: 220px; }
+  .carousel-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 16px;
+  }
 }
 </style>
 {% endblock %}
@@ -173,7 +185,7 @@
         <a href="{{ url_for('main.all_articles') }}">See all →</a>
       </div>
 
-      <div class="cards-grid">
+      <div class="cards-grid home-cards-grid">
         {% for art in latest %}
         <a href="{{ url_for('main.article', slug=art.slug) }}"
            class="card fade-up fade-up-{{ loop.index % 4 }}">
@@ -255,20 +267,28 @@
       <div class="ad-slot ad-slot-square" style="margin-bottom:24px">Ad · 300×250</div>
       {% endif %}
 
-      <!-- Trending (moved below) -->
-      <div class="section-head"><h2>Trending</h2></div>
-      <div class="trending-list">
-        {% for art in trending %}
-        <a href="{{ url_for('main.article', slug=art.slug) }}" class="trending-item">
-          <div class="trending-num">{{ loop.index }}</div>
-          <div>
-            <div class="trending-title">{{ art.title }}</div>
-            <div class="trending-meta">{{ art.views or 0 }} views</div>
-          </div>
-        </a>
-        {% else %}
-        <div style="color:var(--muted);font-size:13px;padding:20px 0">Nothing trending yet.</div>
-        {% endfor %}
+      <!-- Trending -->
+      <div class="news-feed-block">
+        <div class="news-feed-header">
+          <span>🔥 Trending</span>
+        </div>
+        <div class="news-feed-list">
+          {% for art in trending %}
+          <a href="{{ url_for('main.article', slug=art.slug) }}" class="news-feed-item">
+            {% if art.cover_img %}
+              <img src="{{ art.cover_img }}" alt="" class="news-feed-thumb" loading="lazy">
+            {% else %}
+              <div class="news-feed-thumb news-feed-thumb-placeholder">🎬</div>
+            {% endif %}
+            <div>
+              <div class="news-feed-title">{{ art.title }}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--font-mono)">{{ art.views or 0 }} views</div>
+            </div>
+          </a>
+          {% else %}
+          <div style="color:var(--muted);font-size:13px;padding:20px">Nothing trending yet.</div>
+          {% endfor %}
+        </div>
       </div>
 
     </aside>
@@ -345,6 +365,24 @@
   window.carouselNext = function(e) { e.preventDefault(); goto(current+1); startTimer(interval); };
   window.carouselPrev = function(e) { e.preventDefault(); goto(current-1); startTimer(interval); };
   window.carouselGoto = function(e, idx) { e.preventDefault(); goto(idx); startTimer(interval); };
+
+  // Touch swipe support
+  let touchStartX = 0;
+  let touchEndX = 0;
+  if (wrap) {
+    wrap.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    wrap.addEventListener('touchend', function(e) {
+      touchEndX = e.changedTouches[0].screenX;
+      const diff = touchStartX - touchEndX;
+      if (Math.abs(diff) > 40) {
+        if (diff > 0) { goto(current+1); }
+        else { goto(current-1); }
+        startTimer(interval);
+      }
+    }, { passive: true });
+  }
 
   const wrap = document.getElementById('carousel');
   if (wrap) {

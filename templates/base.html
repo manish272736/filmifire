@@ -98,7 +98,7 @@
       align-items: center;
       gap: 0;
       flex-shrink: 0;
-      border-left: 1px solid rgba(255,255,255,0.15);
+      border-right: 1px solid rgba(255,255,255,0.15);
     }
     .ticker-btn {
       background: none;
@@ -119,7 +119,7 @@
       align-items: center;
       gap: 4px;
       padding: 0 10px;
-      border-left: 1px solid rgba(255,255,255,0.15);
+      border-right: 1px solid rgba(255,255,255,0.15);
       height: 36px;
     }
     .ticker-dot {
@@ -140,7 +140,7 @@
     .suggest-box {
       position: absolute;
       top: calc(100% + 6px);
-      right: 0;
+      left: 0;
       width: 320px;
       background: var(--surface);
       border: 1px solid var(--border);
@@ -172,6 +172,123 @@
   .nav-dropdown { position: relative; }
   .nav-dropdown-menu { z-index: 9999 !important; }
   .nav-dropdown-item.active { color: var(--accent); font-weight: 500; }
+
+  /* ── Hamburger button ─────────────────────────────────────────────── */
+  .nav-hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    flex-shrink: 0;
+    border-radius: var(--radius);
+    transition: background 0.15s;
+  }
+  .nav-hamburger:hover { background: var(--surface2); }
+  .nav-hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: transform 0.25s, opacity 0.25s;
+  }
+  .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+  .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* ── Mobile drawer ────────────────────────────────────────────────── */
+  .nav-drawer-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 998;
+  }
+  .nav-drawer-overlay.open { display: block; }
+  .nav-drawer {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    height: 100%;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    z-index: 999;
+    transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .nav-drawer.open { left: 0; }
+  .nav-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .nav-drawer-logo {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .nav-drawer-logo span { color: var(--text); }
+  .nav-drawer-close {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--muted);
+    line-height: 1;
+    padding: 4px;
+  }
+  .nav-drawer-links {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 0;
+    flex: 1;
+  }
+  .nav-drawer-link {
+    display: block;
+    padding: 13px 24px;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s, color 0.1s;
+  }
+  .nav-drawer-link:hover,
+  .nav-drawer-link.active {
+    background: var(--surface2);
+    color: var(--accent);
+  }
+  .nav-drawer-section {
+    padding: 10px 24px 4px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* ── Show hamburger on mobile, hide nav-links ─────────────────────── */
+  @media (max-width: 768px) {
+    .nav-hamburger { display: flex; }
+    .nav-links { display: none !important; }
+    .navbar-inner { gap: 8px; }
+    .nav-logo { font-size: 18px; }
+    #theme-label { display: none; }
+    #theme-toggle { padding: 5px 8px !important; gap: 0 !important; min-width: 32px; justify-content: center; }
+  }
   </style>
   {% block extra_css %}{% endblock %}
 </head>
@@ -207,10 +324,45 @@
 </div>
 {% endif %}
 
+<!-- Mobile drawer overlay -->
+<div class="nav-drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+
+<!-- Mobile slide-in drawer -->
+<div class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-header">
+    <div class="nav-drawer-logo">Filmi<span>Fire</span></div>
+    <button class="nav-drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="nav-drawer-links">
+    <a href="{{ url_for('main.index') }}" class="nav-drawer-link {% if request.endpoint == 'main.index' %}active{% endif %}">🏠 Home</a>
+    <a href="{{ url_for('main.category', slug='news') }}" class="nav-drawer-link {% if request.view_args and request.view_args.get('slug') == 'news' %}active{% endif %}">📰 News</a>
+    <a href="{{ url_for('main.category', slug='photos') }}" class="nav-drawer-link {% if request.view_args and request.view_args.get('slug') == 'photos' %}active{% endif %}">📸 Photos</a>
+    <div class="nav-drawer-section">Industries</div>
+    <a href="{{ url_for('main.category', slug='bollywood') }}" class="nav-drawer-link {% if request.view_args and request.view_args.get('slug') == 'bollywood' %}active{% endif %}">Bollywood</a>
+    <a href="{{ url_for('main.category', slug='kollywood') }}" class="nav-drawer-link {% if request.view_args and request.view_args.get('slug') == 'kollywood' %}active{% endif %}">Kollywood</a>
+    <a href="{{ url_for('main.category', slug='tollywood') }}" class="nav-drawer-link {% if request.view_args and request.view_args.get('slug') == 'tollywood' %}active{% endif %}">Tollywood</a>
+    <a href="{{ url_for('main.category', slug='mollywood') }}" class="nav-drawer-link {% if request.view_args and request.view_args.get('slug') == 'mollywood' %}active{% endif %}">Mollywood</a>
+    <a href="{{ url_for('main.category', slug='sandalwood') }}" class="nav-drawer-link {% if request.view_args and request.view_args.get('slug') == 'sandalwood' %}active{% endif %}">Sandalwood</a>
+    <div class="nav-drawer-section">More</div>
+    <a href="{{ url_for('main.category', slug='box-office') }}" class="nav-drawer-link {% if request.view_args and request.view_args.get('slug') == 'box-office' %}active{% endif %}">📊 Box Office</a>
+    <a href="{{ url_for('main.category', slug='records') }}" class="nav-drawer-link {% if request.view_args and request.view_args.get('slug') == 'records' %}active{% endif %}">🏆 Records</a>
+    <a href="{{ url_for('main.all_articles') }}" class="nav-drawer-link">📄 All Articles</a>
+    <a href="{{ url_for('main.about') }}" class="nav-drawer-link">ℹ️ About</a>
+    <a href="{{ url_for('main.contact') }}" class="nav-drawer-link">✉️ Contact</a>
+  </div>
+</div>
+
 <!-- Navbar -->
 <nav class="navbar">
   <div class="navbar-inner">
+    <!-- Hamburger (mobile only) -->
+    <button class="nav-hamburger" id="hamburger-btn" onclick="openDrawer()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
     <a href="{{ url_for('main.index') }}" class="nav-logo">Filmi<span>Fire</span></a>
+
+    <!-- Desktop links -->
     <div class="nav-links">
       <a href="{{ url_for('main.index') }}" class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">Home</a>
       <a href="{{ url_for('main.category', slug='news') }}" class="nav-link {% if request.view_args and request.view_args.get('slug') == 'news' %}active{% endif %}">News</a>
@@ -328,12 +480,32 @@
   <div class="footer-bottom">
     <div class="container">
       <div class="footer-bottom-inner">
-        <span>© 2025 FilmiFire · All rights reserved</span>
+        <span>© 2026 FilmiFire · All rights reserved</span>
         <span>Made with ❤️ for Indian cinema fans</span>
       </div>
     </div>
   </div>
 </footer>
+
+<!-- Drawer script -->
+<script>
+function openDrawer() {
+  document.getElementById('nav-drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('hamburger-btn').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer() {
+  document.getElementById('nav-drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+  document.getElementById('hamburger-btn').classList.remove('open');
+  document.body.style.overflow = '';
+}
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeDrawer();
+});
+</script>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
