@@ -71,27 +71,6 @@
   color: rgba(255,255,255,0.5);
   font-family: var(--font-mono);
 }
-.carousel-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,0.5);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: #fff;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background 0.15s;
-  z-index: 10;
-}
-.carousel-btn:hover { background: rgba(0,0,0,0.75); }
-.carousel-btn-prev { left: 10px; }
-.carousel-btn-next { right: 10px; }
 .carousel-dots {
   position: absolute;
   bottom: 12px;
@@ -119,22 +98,9 @@
 }
 @media(max-width:900px){
   .carousel-slide { height: 280px; }
-  .carousel-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 18px;
-    background: rgba(0,0,0,0.45);
-  }
-  .carousel-btn-prev { left: 6px; }
-  .carousel-btn-next { right: 6px; }
 }
 @media(max-width:600px){
   .carousel-slide { height: 220px; }
-  .carousel-btn {
-    width: 26px;
-    height: 26px;
-    font-size: 16px;
-  }
 }
 </style>
 {% endblock %}
@@ -166,8 +132,6 @@
           </a>
           {% endfor %}
         </div>
-        <button class="carousel-btn carousel-btn-prev" onclick="carouselPrev(event)">&#8249;</button>
-        <button class="carousel-btn carousel-btn-next" onclick="carouselNext(event)">&#8250;</button>
         <div class="carousel-dots" id="carousel-dots">
           {% for art in slider_articles %}
           <div class="carousel-dot {% if loop.first %}active{% endif %}"
@@ -182,7 +146,6 @@
       <div class="section-head">
         <h2>Latest</h2>
         <div class="line"></div>
-        <a href="{{ url_for('main.all_articles') }}">See all →</a>
       </div>
 
       <div class="cards-grid home-cards-grid">
@@ -215,6 +178,18 @@
         </div>
         {% endfor %}
       </div>
+
+      <!-- See All button after articles -->
+      <div style="text-align:center;margin:-32px 0 48px">
+        <a href="{{ url_for('main.all_articles') }}"
+           style="display:inline-block;padding:10px 32px;border:1px solid var(--border);
+                  border-radius:20px;font-size:13px;color:var(--muted);
+                  background:var(--surface);transition:color 0.15s,border-color 0.15s;
+                  text-decoration:none;">
+          See All Articles →
+        </a>
+      </div>
+
     </div>
 
     <!-- Right sidebar -->
@@ -296,6 +271,7 @@
   </div>
 </div>
 
+
 {% block extra_js %}
 <script>
 (function() {
@@ -303,104 +279,120 @@
   const dots   = document.querySelectorAll('.carousel-dot');
   const prog   = document.getElementById('carousel-progress');
   const slides = document.querySelectorAll('.carousel-slide');
+  const wrap   = document.getElementById('carousel');
   if (!track || !dots.length) return;
-  const total = dots.length;
-  const interval = 4000;
-  let current = 0, timer = null;
-  let pausedAt = null, startedAt = null, remaining = interval;
 
-  function startProgress(duration) {
-    if (!prog) return;
-    prog.style.transition = 'none';
-    prog.style.width = '0%';
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      prog.style.transition = `width ${duration}ms linear`;
-      prog.style.width = '100%';
-    }));
+  const total    = dots.length;
+  const INTERVAL = 4000;
+  let current    = 0;
+  let timer      = null;
+  let rafId      = null;
+  let cycleStart = 0;
+  let paused     = false;
+  let pausedAt   = 0;
+  let elapsed    = 0;
+
+  /* ── Progress bar driven by rAF — no CSS transition ───── */
+  function updateProg() {
+    if (!prog || paused) return;
+    const now  = Date.now();
+    const pct  = Math.min(100, ((now - cycleStart) / INTERVAL) * 100);
+    prog.style.width = pct + '%';
+    if (pct < 100) rafId = requestAnimationFrame(updateProg);
   }
 
+  function startProg() {
+    cancelAnimationFrame(rafId);
+    if (prog) prog.style.width = '0%';
+    cycleStart = Date.now();
+    rafId = requestAnimationFrame(updateProg);
+  }
+
+  function stopProg() {
+    cancelAnimationFrame(rafId);
+  }
+
+  /* ── Slide ─────────────────────────────────────────────── */
   function goto(idx) {
     slides[current].classList.remove('active');
     current = (idx + total) % total;
-    track.style.transform = `translateX(-${current * 100}%)`;
-    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+    track.style.transform = 'translateX(-' + (current * 100) + '%)';
+    dots.forEach(function(d, i) { d.classList.toggle('active', i === current); });
     slides[current].classList.add('active');
-    remaining = interval;
-    startProgress(interval);
   }
 
-  function startTimer(delay) {
+  /* ── Cycle ─────────────────────────────────────────────── */
+  function startCycle() {
     clearTimeout(timer);
-    startedAt = Date.now();
-    remaining = delay;
+    stopProg();
+    startProg();
     timer = setTimeout(function() {
       goto(current + 1);
-      startTimer(interval);
-    }, delay);
+      startCycle();
+    }, INTERVAL);
   }
 
-  function pauseTimer() {
+  /* ── Pause / Resume ────────────────────────────────────── */
+  function pause() {
+    if (paused) return;
+    paused = true;
+    pausedAt = Date.now();
     clearTimeout(timer);
-    const elapsed = Date.now() - startedAt;
-    remaining = Math.max(0, remaining - elapsed);
-    // Freeze progress bar at current position
-    if (prog) {
-      const computed = window.getComputedStyle(prog).width;
-      prog.style.transition = 'none';
-      prog.style.width = computed;
-    }
+    stopProg();
   }
 
-  function resumeTimer() {
-    // Resume progress bar for remaining time
-    if (prog) {
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        prog.style.transition = `width ${remaining}ms linear`;
-        prog.style.width = '100%';
-      }));
-    }
-    startTimer(remaining);
+  function resume() {
+    if (!paused) return;
+    paused = false;
+    // Shift cycleStart forward by how long we were paused
+    const pausedDuration = Date.now() - pausedAt;
+    cycleStart += pausedDuration;
+    const left = Math.max(50, INTERVAL - (Date.now() - cycleStart));
+    rafId = requestAnimationFrame(updateProg);
+    timer = setTimeout(function() {
+      goto(current + 1);
+      startCycle();
+    }, left);
   }
 
-  window.carouselNext = function(e) { e.preventDefault(); goto(current+1); startTimer(interval); };
-  window.carouselPrev = function(e) { e.preventDefault(); goto(current-1); startTimer(interval); };
-  window.carouselGoto = function(e, idx) { e.preventDefault(); goto(idx); startTimer(interval); };
+  /* ── Controls ──────────────────────────────────────────── */
+  window.carouselGoto = function(e, idx) { e.preventDefault(); goto(idx); startCycle(); };
 
-  // Touch swipe support
-  let touchStartX = 0;
-  let touchEndX = 0;
-
-  const wrap = document.getElementById('carousel');
+  /* ── Touch & Mouse ─────────────────────────────────────── */
+  var touchStartX = 0;
   if (wrap) {
-    wrap.addEventListener('mouseenter', pauseTimer);
-    wrap.addEventListener('mouseleave', resumeTimer);
+    wrap.addEventListener('mouseenter', pause);
+    wrap.addEventListener('mouseleave', resume);
     wrap.addEventListener('touchstart', function(e) {
       touchStartX = e.changedTouches[0].screenX;
-      pauseTimer();
+      pause();
     }, { passive: true });
     wrap.addEventListener('touchend', function(e) {
-      touchEndX = e.changedTouches[0].screenX;
-      const diff = touchStartX - touchEndX;
+      var diff = touchStartX - e.changedTouches[0].screenX;
       if (Math.abs(diff) > 40) {
-        if (diff > 0) { goto(current+1); }
-        else { goto(current-1); }
+        goto(diff > 0 ? current + 1 : current - 1);
+        startCycle();
+      } else {
+        resume();
       }
-      resumeTimer();
     }, { passive: true });
   }
 
-  // Delay init so browser has laid out the track fully
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    track.style.transition = 'none';
-    track.style.transform = 'translateX(0%)';
-    slides[0].classList.add('active');
-    dots[0] && dots[0].classList.add('active');
-    setTimeout(() => {
-      track.style.transition = '';
-      startProgress(interval);
-      startTimer(interval);
-    }, 50);
-  }));
+  /* ── Init ──────────────────────────────────────────────── */
+  if (prog) prog.style.transition = 'none';
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      track.style.transition = 'none';
+      track.style.transform = 'translateX(0%)';
+      slides[0].classList.add('active');
+      if (dots[0]) dots[0].classList.add('active');
+      setTimeout(function() {
+        track.style.transition = '';
+        startCycle();
+      }, 50);
+    });
+  });
+
 })();
 </script>
 {% endblock %}

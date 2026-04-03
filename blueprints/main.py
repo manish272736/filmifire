@@ -50,13 +50,13 @@ def reltime_filter(dt):
 def index():
     db = get_db()
     pinned = list(db.articles.find(
-        {"status": "published", "archived": {"$ne": True}, "pinned": True},
+        {"status": "published", "archived": {"$ne": True}, "pinned": True, "category": {"$ne": "photos"}},
         sort=[("published_at", -1)]
     ))
     pinned_ids = [a["_id"] for a in pinned]
     remaining_limit = max(0, 9 - len(pinned))
     rest = list(db.articles.find(
-        {"status": "published", "archived": {"$ne": True}, "_id": {"$nin": pinned_ids}},
+        {"status": "published", "archived": {"$ne": True}, "_id": {"$nin": pinned_ids}, "category": {"$ne": "photos"}},
         sort=[("published_at", -1)],
         limit=remaining_limit
     ))
@@ -74,12 +74,12 @@ def index():
     slider_articles = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "carousel": True},
         sort=[("published_at", -1)],
-        limit=5
+        limit=7
     ))
     photo_articles = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "category": "photos"},
         sort=[("published_at", -1)],
-        limit=6
+        limit=4
     ))
     return render_template("index.html", latest=latest, trending=trending, latest_news=latest_news, slider_articles=slider_articles, photo_articles=photo_articles)
 
