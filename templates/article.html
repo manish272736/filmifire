@@ -27,10 +27,6 @@
           <span title="{{ article.published_at | fmtdate if article.published_at else '' }}">
             {{ article.published_at | reltime if article.published_at else 'Draft' }}
           </span>
-          <span>{{ article.views or 0 }} views</span>
-          {% if article.tags %}
-            <span>{{ article.tags | join(', ') }}</span>
-          {% endif %}
         </div>
       </div>
 
