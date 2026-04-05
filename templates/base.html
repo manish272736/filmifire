@@ -599,6 +599,25 @@ document.addEventListener('keydown', function(e) {
 })();
 </script>
 
+<!-- Auto wrap tables in scroll container -->
+<script>
+function wrapTables() {
+  var body = document.querySelector('.article-body');
+  if (!body) return;
+  body.querySelectorAll('table').forEach(function(table) {
+    if (table.parentElement.classList.contains('table-scroll-wrap')) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'table-scroll-wrap';
+    wrap.style.cssText = 'display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:24px 0;border:1px solid rgba(0,0,0,0.1);border-radius:6px;';
+    table.parentNode.insertBefore(wrap, table);
+    wrap.appendChild(table);
+    table.style.cssText = 'margin:0;border:none;width:max-content;min-width:100%;';
+  });
+}
+document.addEventListener('DOMContentLoaded', wrapTables);
+setTimeout(wrapTables, 300);
+</script>
+
 {% block extra_js %}{% endblock %}
 
 <script>

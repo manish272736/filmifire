@@ -44,60 +44,63 @@
 
     </article>
 
-    <!-- Sidebar -->
+    <!-- Sidebar — always shows Photos, Related, Latest News, Trending -->
     <aside class="sidebar">
 
-      {% if article.category == 'news' %}
-        <!-- NEWS ARTICLE: show only Latest News feed -->
-        {% if latest_news %}
-        <div class="news-feed-block">
-          <div class="news-feed-header">
-            <span>Latest News</span>
-            <a href="{{ url_for('main.category', slug='news') }}">See all →</a>
-          </div>
-          <div class="news-feed-list">
-            {% for art in latest_news %}
-              {% if art.slug != article.slug %}
-              <a href="{{ url_for('main.article', slug=art.slug) }}" class="news-feed-item">
-                {% if art.cover_img %}
-                  <img src="{{ art.cover_img }}" alt="" class="news-feed-thumb" loading="lazy">
-                {% else %}
-                  <div class="news-feed-thumb news-feed-thumb-placeholder">🎬</div>
-                {% endif %}
-                <div class="news-feed-title">{{ art.title }}</div>
-              </a>
-              {% endif %}
-            {% endfor %}
-          </div>
+      <!-- Photos grid -->
+      {% if photo_articles %}
+      <div class="photo-grid-block" style="margin-bottom:24px">
+        <div class="photo-grid-header">
+          <span>📸 Photos</span>
+          <a href="{{ url_for('main.category', slug='photos') }}">See all →</a>
         </div>
-        {% endif %}
-
-      {% else %}
-        <!-- NON-NEWS ARTICLE: show Related Articles + Latest News -->
-        {% if related %}
-        <div class="sidebar-block">
-          <div class="sidebar-title">Related Articles</div>
-          {% for art in related %}
-            <a href="{{ url_for('main.article', slug=art.slug) }}" class="sidebar-article">
-              {% if art.cover_img %}
-                <img src="{{ art.cover_img }}" class="sidebar-thumb" alt="" loading="lazy">
-              {% else %}
-                <div class="sidebar-thumb" style="background:var(--surface2);border-radius:3px"></div>
-              {% endif %}
-              <div class="sidebar-art-title">{{ art.title }}</div>
-            </a>
+        <div class="photo-grid">
+          {% for art in photo_articles %}
+          <a href="{{ url_for('main.article', slug=art.slug) }}" class="photo-grid-item">
+            {% if art.cover_img %}
+              <img src="{{ art.cover_img }}" alt="{{ art.title }}" loading="lazy">
+            {% else %}
+              <div class="photo-grid-placeholder">📷</div>
+            {% endif %}
+            <div class="photo-grid-item-overlay"></div>
+            <div class="photo-grid-item-title">{{ art.title }}</div>
+          </a>
           {% endfor %}
         </div>
-        {% endif %}
+      </div>
+      {% endif %}
 
-        {% if latest_news %}
-        <div class="news-feed-block" style="margin-top:{% if related %}20px{% else %}0{% endif %}">
-          <div class="news-feed-header">
-            <span>Latest News</span>
-            <a href="{{ url_for('main.category', slug='news') }}">See all →</a>
-          </div>
-          <div class="news-feed-list">
-            {% for art in latest_news %}
+      <!-- Related Articles -->
+      {% if related %}
+      <div class="news-feed-block" style="margin-bottom:24px">
+        <div class="news-feed-header">
+          <span>Related Articles</span>
+        </div>
+        <div class="news-feed-list">
+          {% for art in related %}
+          <a href="{{ url_for('main.article', slug=art.slug) }}" class="news-feed-item">
+            {% if art.cover_img %}
+              <img src="{{ art.cover_img }}" alt="" class="news-feed-thumb" loading="lazy">
+            {% else %}
+              <div class="news-feed-thumb news-feed-thumb-placeholder">🎬</div>
+            {% endif %}
+            <div class="news-feed-title">{{ art.title }}</div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Latest News -->
+      {% if latest_news %}
+      <div class="news-feed-block" style="margin-bottom:24px">
+        <div class="news-feed-header">
+          <span>Latest News</span>
+          <a href="{{ url_for('main.category', slug='news') }}">See all →</a>
+        </div>
+        <div class="news-feed-list">
+          {% for art in latest_news %}
+            {% if art.slug != article.slug %}
             <a href="{{ url_for('main.article', slug=art.slug) }}" class="news-feed-item">
               {% if art.cover_img %}
                 <img src="{{ art.cover_img }}" alt="" class="news-feed-thumb" loading="lazy">
@@ -106,11 +109,36 @@
               {% endif %}
               <div class="news-feed-title">{{ art.title }}</div>
             </a>
-            {% endfor %}
-          </div>
+            {% endif %}
+          {% endfor %}
         </div>
-        {% endif %}
+      </div>
+      {% endif %}
 
+      <!-- Trending -->
+      {% if trending %}
+      <div class="news-feed-block">
+        <div class="news-feed-header">
+          <span>🔥 Trending</span>
+        </div>
+        <div class="news-feed-list">
+          {% for art in trending %}
+            {% if art.slug != article.slug %}
+            <a href="{{ url_for('main.article', slug=art.slug) }}" class="news-feed-item">
+              {% if art.cover_img %}
+                <img src="{{ art.cover_img }}" alt="" class="news-feed-thumb" loading="lazy">
+              {% else %}
+                <div class="news-feed-thumb news-feed-thumb-placeholder">🎬</div>
+              {% endif %}
+              <div>
+                <div class="news-feed-title">{{ art.title }}</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--font-mono)">{{ art.views or 0 }} views</div>
+              </div>
+            </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
       {% endif %}
 
     </aside>
