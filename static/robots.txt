@@ -5,4 +5,4 @@ Disallow: /admin/
 Disallow: /admin/login
 Disallow: /admin/setup
 
-Sitemap: https://www.filmifire.com/sitemap.xml
+Sitemap: https://filmifire.com/sitemap.xml
