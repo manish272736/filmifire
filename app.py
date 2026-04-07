@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, redirect, request
 from extensions import login_manager
 from config import Config
 from db import init_db, get_db
@@ -9,6 +9,13 @@ def create_app():
     app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50MB
 
     login_manager.init_app(app)
+
+    # ── Redirect onrender.com → filmifire.com ─────────────────────────────────
+    @app.before_request
+    def redirect_to_custom_domain():
+        if 'onrender.com' in request.host:
+            url = 'https://filmifire.com' + request.full_path.rstrip('?')
+            return redirect(url, 301)
 
     from blueprints.main import main_bp
     from blueprints.admin import admin_bp
