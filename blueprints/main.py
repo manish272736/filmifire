@@ -140,13 +140,28 @@ def all_articles():
     ))
     total_pages = (total + per_page - 1) // per_page
     from config import Config
+    photo_articles = list(db.articles.find(
+        {"status": "published", "archived": {"$ne": True}, "category": "photos"},
+        sort=[("published_at", -1)], limit=6
+    ))
+    latest_news = list(db.articles.find(
+        {"status": "published", "archived": {"$ne": True}, "category": "news"},
+        sort=[("published_at", -1)], limit=6
+    ))
+    trending = list(db.articles.find(
+        {"status": "published", "archived": {"$ne": True}},
+        sort=[("views", -1)], limit=5
+    ))
     return render_template("all_articles.html",
         articles=articles,
         page=page,
         total_pages=total_pages,
         total=total,
         current_cat=cat,
-        categories=Config.CATEGORIES
+        categories=Config.CATEGORIES,
+        photo_articles=photo_articles,
+        latest_news=latest_news,
+        trending=trending
     )
 
 # ── Category page ─────────────────────────────────────────────────────────────
