@@ -44,6 +44,14 @@ def create_app():
     def robots():
         return send_from_directory(app.static_folder, "robots.txt")
 
+    # ── Close MongoDB connection after each request ───────────────────────────
+    @app.teardown_appcontext
+    def close_db(error):
+        from flask import g
+        client = g.pop('db_client', None)
+        if client is not None:
+            client.close()
+
     init_db(app)
     return app
 

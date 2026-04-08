@@ -1,23 +1,28 @@
 from pymongo import MongoClient, TEXT
 from pymongo.errors import OperationFailure
-from flask import current_app
+from flask import current_app, g
 import certifi
 
-_client = None
-
 def get_db():
-    global _client
-    if _client is None:
-        _client = MongoClient(
+    if 'db_client' not in g:
+        g.db_client = MongoClient(
             current_app.config["MONGO_URI"],
             tlsCAFile=certifi.where(),
-            tls=True
+            tls=True,
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=5000,
         )
-    return _client["filmifire"]
+    return g.db_client["filmifire"]
 
 def init_db(app):
     with app.app_context():
-        db = get_db()
+        client = MongoClient(
+            app.config["MONGO_URI"],
+            tlsCAFile=certifi.where(),
+            tls=True,
+            serverSelectionTimeoutMS=5000,
+        )
+        db = client["filmifire"]
         try:
             db.articles.create_index(
                 [("title", TEXT), ("tags", TEXT), ("excerpt", TEXT)],
@@ -29,3 +34,4 @@ def init_db(app):
         db.articles.create_index("category")
         db.articles.create_index("status")
         db.articles.create_index("published_at")
+        client.close()
