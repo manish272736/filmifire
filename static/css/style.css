@@ -1110,7 +1110,9 @@ img { display: block; max-width: 100%; }
 
 /* Prevent horizontal scroll on all screens except scrollable tables */
 html, body { max-width: 100%; }
-.navbar, .site-footer { overflow-x: hidden; }
+/* Prevent horizontal scroll — navbar uses overflow visible for dropdown */
+.site-footer { overflow-x: hidden; }
+.navbar { overflow: visible; }
 
 /* On touch/mobile devices show photo title always with 1 line */
 @media (hover: none) {
