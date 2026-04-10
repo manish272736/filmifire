@@ -148,8 +148,30 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+// Twitter/X embed — official async loader pattern
+window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0], t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  fjs.parentNode.insertBefore(js, fjs);
+  t._e = [];
+  t.ready = function(f) { t._e.push(f); };
+  return t;
+}(document, "script", "twitter-wjs"));
+
+// Force re-render once page is fully loaded
+window.addEventListener('load', function() {
+  if (window.twttr && window.twttr.widgets) {
+    window.twttr.widgets.load(document.querySelector('.article-body'));
+  }
+  if (window.instgrm && window.instgrm.Embeds) {
+    window.instgrm.Embeds.process();
+  }
+});
+</script>
 <!-- Instagram embed -->
 <script async src="//www.instagram.com/embed.js"></script>
-<!-- Twitter/X embed -->
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 {% endblock %}

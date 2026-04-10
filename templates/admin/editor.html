@@ -27,7 +27,6 @@
     .btn-primary { background:var(--accent); color:#000; }
     .btn-ghost { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
     .btn-danger { background:#c0392b; color:#fff; }
-    /* Quill dark theme overrides */
     .ql-toolbar { background:var(--surface2) !important; border:1px solid var(--border) !important; border-radius:var(--radius) var(--radius) 0 0 !important; }
     .ql-container { background:var(--surface) !important; border:1px solid var(--border) !important; border-top:none !important; border-radius:0 0 var(--radius) var(--radius) !important; min-height:360px; font-family:var(--font-body); font-size:16px; }
     .ql-editor { color:var(--text) !important; min-height:360px; line-height:1.7; }
@@ -45,32 +44,24 @@
 </head>
 <body>
 <div class="editor-wrap">
-
   <div class="editor-header">
     <div class="editor-logo">FilmiFire <span style="color:var(--muted);font-size:14px;font-family:var(--font-body)">/ {{ 'Edit Article' if article else 'New Article' }}</span></div>
     <div style="display:flex;gap:10px">
       <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost">← Dashboard</a>
     </div>
   </div>
-
   <form method="POST" enctype="multipart/form-data" id="article-form">
-
-    <!-- Title -->
     <div class="field">
       <label>Headline *</label>
       <input type="text" name="title" id="title-input" required
              placeholder="e.g. Dhurandhar crosses ₹300 Cr — every record it broke"
              value="{{ article.title if article else '' }}">
     </div>
-
-    <!-- Excerpt -->
     <div class="field">
       <label>Excerpt (shown in cards & meta description)</label>
       <textarea name="excerpt" rows="2"
                 placeholder="Short summary for Google and article cards (150–160 chars)">{{ article.excerpt if article else '' }}</textarea>
     </div>
-
-    <!-- Category + Status -->
     <div class="field-row">
       <div class="field">
         <label>Category *</label>
@@ -92,8 +83,6 @@
         </select>
       </div>
     </div>
-
-    <!-- Author -->
     <div class="field">
       <label>Written By</label>
       <select name="author">
@@ -104,16 +93,12 @@
         <option value="FilmiFire Desk" {% if article and article.get('author') == 'FilmiFire Desk' %}selected{% endif %}>FilmiFire Desk</option>
       </select>
     </div>
-
-    <!-- Tags -->
     <div class="field">
       <label>Tags (comma-separated movie/actor names)</label>
       <input type="text" name="tags"
              placeholder="Dhurandhar, Ranveer Singh, Bollywood, box office"
              value="{{ article.tags | join(', ') if article and article.tags else '' }}">
     </div>
-
-    <!-- Cover image -->
     <div class="field">
       <label>Cover Image</label>
       <div class="img-url-row">
@@ -129,8 +114,6 @@
            src="{{ article.cover_img if article and article.cover_img else '' }}"
            {% if article and article.cover_img %}style="display:block"{% endif %}>
     </div>
-
-    <!-- Featured -->
     <div class="field">
       <label class="check-row">
         <input type="checkbox" name="featured"
@@ -138,8 +121,6 @@
         Feature this article on homepage hero
       </label>
     </div>
-
-    <!-- Pin to homepage -->
     <div class="field">
       <label class="check-row">
         <input type="checkbox" name="pinned"
@@ -147,8 +128,6 @@
         📌 Pin to homepage (keeps article visible on homepage regardless of date)
       </label>
     </div>
-
-    <!-- Ticker -->
     <div class="field">
       <label class="check-row">
         <input type="checkbox" name="ticker"
@@ -156,22 +135,17 @@
         🔴 Show in Breaking News ticker (top of every page)
       </label>
     </div>
-
-    <!-- Carousel -->
     <div class="field">
       <label class="check-row">
         <input type="checkbox" name="carousel"
                {% if article and article.get('carousel') %}checked{% endif %}>
-        🎠 Show in homepage carousel slider (max 5 at a time, newest first)
+        🎠 Show in homepage carousel slider (max 7 at a time, newest first)
       </label>
     </div>
-
-    <!-- Rich text editor -->
     <div class="field">
       <label>Article Body *</label>
       <div id="quill-editor">{{ article.body_html | safe if article and article.body_html else '' }}</div>
       <input type="hidden" name="body_html" id="body-html-input">
-      <!-- Embed button below editor -->
       <button type="button" onclick="openEmbedModal()"
         style="margin-top:8px;background:var(--surface2);border:1px solid var(--border);
                border-radius:var(--radius);padding:6px 16px;font-size:13px;font-family:var(--font-body);
@@ -179,8 +153,6 @@
         📎 Embed Instagram / Twitter / YouTube at cursor
       </button>
     </div>
-
-    <!-- Submit buttons -->
     <div style="display:flex;gap:12px;margin-top:28px;flex-wrap:wrap">
       <button type="submit" class="btn btn-primary" onclick="setBodyHtml()">
         {% if article %}Update Article{% else %}Save Article{% endif %}
@@ -191,8 +163,8 @@
            class="btn btn-ghost" target="_blank">Preview →</a>
       {% endif %}
     </div>
-
-  </form></div>
+  </form>
+</div>
 
 <!-- Embed modal -->
 <div id="embed-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center">
@@ -214,7 +186,6 @@
   </div>
 </div>
 
-<!-- Hidden file input for image upload to Cloudinary -->
 <input type="file" id="quill-img-upload" accept="image/*" style="display:none">
 
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
@@ -233,7 +204,6 @@ const quill = new Quill('#quill-editor', {
   }
 });
 
-// ── Override image button to upload via Cloudinary ────────────────────────
 const toolbar = quill.getModule('toolbar');
 toolbar.addHandler('image', function() {
   document.getElementById('quill-img-upload').click();
@@ -243,21 +213,15 @@ document.getElementById('quill-img-upload').addEventListener('change', async fun
   const file = this.files[0];
   if (!file) return;
   const statusEl = document.querySelector('.ql-toolbar');
-
-  // Show loading indicator
   const loader = document.createElement('span');
   loader.id = 'img-upload-loader';
   loader.textContent = ' Uploading image…';
   loader.style.cssText = 'font-size:12px;color:#888;margin-left:8px';
   statusEl.appendChild(loader);
-
   try {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await fetch('/admin/upload-image', {
-      method: 'POST',
-      body: formData
-    });
+    const response = await fetch('/admin/upload-image', { method: 'POST', body: formData });
     const data = await response.json();
     if (data.url) {
       const range = quill.getSelection(true);
@@ -275,7 +239,6 @@ document.getElementById('quill-img-upload').addEventListener('change', async fun
   }
 });
 
-// ── Embed modal ───────────────────────────────────────────────────────────
 function openEmbedModal() {
   document.getElementById('embed-url-input').value = '';
   document.getElementById('embed-status').textContent = '';
@@ -285,6 +248,29 @@ function openEmbedModal() {
 
 function closeEmbedModal() {
   document.getElementById('embed-modal').style.display = 'none';
+}
+
+// Helper — inject raw HTML into Quill by directly manipulating DOM
+function injectRawHtml(html) {
+  const range = quill.getSelection(true);
+  const idx = range ? range.index : quill.getLength();
+  // Insert a newline placeholder at position
+  quill.insertText(idx, '\n', 'user');
+  // Get the leaf node at that position and insert after it
+  const [leaf] = quill.getLeaf(idx);
+  const node = leaf && leaf.domNode ? leaf.domNode : quill.root.lastChild;
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = html;
+  const el = wrapper.firstChild;
+  if (node && node.parentNode === quill.root) {
+    node.parentNode.insertBefore(el, node.nextSibling);
+  } else {
+    quill.root.appendChild(el);
+  }
+  // Insert trailing newline so cursor moves past embed
+  quill.insertText(quill.getLength(), '\n', 'user');
+  quill.setSelection(quill.getLength(), 0);
+  quill.update();
 }
 
 async function insertEmbed() {
@@ -308,9 +294,7 @@ async function insertEmbed() {
 
   // Instagram
   if (url.includes('instagram.com')) {
-    const html = '<div style="display:flex;justify-content:center;margin:20px 0"><blockquote class="instagram-media" data-instgrm-permalink="' + url + '" data-instgrm-version="14" style="max-width:540px;width:100%;border-radius:8px"><p><a href="' + url + '" target="_blank">View on Instagram</a></p></blockquote></div>';
-    const delta = quill.clipboard.convert({html: html});
-    quill.updateContents(delta, 'user');
+    injectRawHtml('<blockquote class="instagram-media" data-instgrm-permalink="' + url + '" data-instgrm-version="14" style="max-width:540px;width:100%;margin:20px auto;border-radius:8px"><p><a href="' + url + '" target="_blank">View on Instagram</a></p></blockquote>');
     if (window.instgrm) window.instgrm.Embeds.process();
     status.textContent = '✓ Instagram post embedded!';
     setTimeout(closeEmbedModal, 800);
@@ -319,10 +303,15 @@ async function insertEmbed() {
 
   // Twitter / X
   if (url.includes('twitter.com') || url.includes('x.com')) {
-    const html = '<div style="display:flex;justify-content:center;margin:20px 0"><blockquote class="twitter-tweet"><a href="' + url + '" target="_blank">View tweet</a></blockquote></div>';
-    const delta = quill.clipboard.convert({html: html});
-    quill.updateContents(delta, 'user');
-    if (window.twttr) window.twttr.widgets.load();
+    injectRawHtml('<blockquote class="twitter-tweet"><a href="' + url + '"></a></blockquote>');
+    if (window.twttr && window.twttr.widgets) {
+      window.twttr.widgets.load(quill.root);
+    } else {
+      const s = document.createElement('script');
+      s.src = 'https://platform.twitter.com/widgets.js';
+      document.body.appendChild(s);
+      s.onload = () => window.twttr.widgets.load(quill.root);
+    }
     status.textContent = '✓ Tweet embedded!';
     setTimeout(closeEmbedModal, 800);
     return;
@@ -342,13 +331,11 @@ document.getElementById('embed-url-input').addEventListener('keydown', function(
 function setBodyHtml() {
   document.getElementById('body-html-input').value = quill.root.innerHTML;
 }
-
 function previewFromUrl(url) {
   const img = document.getElementById('cover-preview');
   if (url) { img.src = url; img.style.display = 'block'; }
   else { img.style.display = 'none'; }
 }
-
 function previewFile(input) {
   if (!input.files || !input.files[0]) return;
   const reader = new FileReader();
@@ -359,34 +346,24 @@ function previewFile(input) {
   };
   reader.readAsDataURL(input.files[0]);
 }
-
 document.getElementById('article-form').addEventListener('submit', function() {
   document.getElementById('body-html-input').value = quill.root.innerHTML;
 });
 
-// ── Image click toolbar ───────────────────────────────────────────────────
+// Image click toolbar
 const imgToolbar = document.createElement('div');
 imgToolbar.id = 'img-toolbar';
 imgToolbar.style.cssText = 'display:none;position:fixed;background:#1a1a1c;border-radius:6px;padding:5px 8px;gap:5px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.4);white-space:nowrap;align-items:center';
-
 const btnStyle = 'background:#444;color:#fff;border:none;border-radius:3px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:sans-serif;transition:background 0.1s';
-const hoverStyle = 'background:#666';
-
 function makeBtn(text, title, fn) {
   const b = document.createElement('button');
-  b.textContent = text;
-  b.title = title;
-  b.type = 'button';
+  b.textContent = text; b.title = title; b.type = 'button';
   b.style.cssText = btnStyle;
   b.addEventListener('mouseenter', () => b.style.background = '#666');
   b.addEventListener('mouseleave', () => b.style.background = '#444');
-  b.addEventListener('mousedown', function(e) {
-    e.preventDefault(); e.stopPropagation();
-    fn();
-  });
+  b.addEventListener('mousedown', function(e) { e.preventDefault(); e.stopPropagation(); fn(); });
   return b;
 }
-
 function lbl(text) {
   const s = document.createElement('span');
   s.textContent = text;
@@ -399,7 +376,6 @@ function sep() {
   s.style.cssText = 'color:#555;font-size:12px;margin:0 2px';
   return s;
 }
-
 imgToolbar.appendChild(lbl('Size'));
 imgToolbar.appendChild(makeBtn('S','Small ~35%', () => imgSize('img-small')));
 imgToolbar.appendChild(makeBtn('M','Medium ~60%', () => imgSize('img-medium')));
@@ -410,48 +386,38 @@ imgToolbar.appendChild(makeBtn('←','Float left — text wraps right', () => im
 imgToolbar.appendChild(makeBtn('→','Float right — text wraps left', () => imgFloat('img-right')));
 imgToolbar.appendChild(makeBtn('↔','Center, no float', () => imgFloat('')));
 imgToolbar.appendChild(sep());
-
 document.body.appendChild(imgToolbar);
-
 let selectedImg = null;
-
 document.querySelector('.ql-editor').addEventListener('mousedown', function(e) {
   if (e.target.tagName === 'IMG') {
     e.preventDefault();
     selectedImg = e.target;
     const rect = e.target.getBoundingClientRect();
     imgToolbar.style.display = 'flex';
-    // Position above the image
     let top = rect.top - 46;
     if (top < 8) top = rect.bottom + 6;
     imgToolbar.style.top = top + 'px';
     imgToolbar.style.left = Math.max(8, rect.left) + 'px';
-    // Highlight selected
     document.querySelectorAll('.ql-editor img').forEach(i => i.style.outline = '');
     selectedImg.style.outline = '2px solid #c49a1a';
   }
 });
-
 document.addEventListener('mousedown', function(e) {
   if (imgToolbar.contains(e.target)) return;
   if (e.target.tagName === 'IMG' && document.querySelector('.ql-editor').contains(e.target)) return;
   imgToolbar.style.display = 'none';
   if (selectedImg) { selectedImg.style.outline = ''; selectedImg = null; }
 });
-
 function imgSize(cls) {
   if (!selectedImg) return;
   selectedImg.classList.remove('img-small','img-medium','img-full');
   if (cls !== 'img-full') selectedImg.classList.add(cls);
 }
-
 function imgFloat(cls) {
   if (!selectedImg) return;
   selectedImg.classList.remove('img-left','img-right');
   if (cls) selectedImg.classList.add(cls);
 }
-
-
 </script>
 </body>
 </html>
