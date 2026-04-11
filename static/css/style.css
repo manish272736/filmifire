@@ -1086,7 +1086,10 @@ img { display: block; max-width: 100%; }
 }
 
 /* Prevent horizontal scroll on all screens */
-html, body { max-width: 100%; overflow-x: hidden; }
+/* Prevent page horizontal scroll but allow table scroll inside articles */
+html, body { max-width: 100%; }
+.navbar { overflow: visible; }
+.site-footer { overflow-x: hidden; }
 
 /* Photo title always visible on touch/mobile */
 @media (hover: none) {

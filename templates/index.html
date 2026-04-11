@@ -35,7 +35,7 @@
 .carousel-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.05) 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.0) 60%);
 }
 .carousel-content {
   position: absolute;
@@ -52,7 +52,7 @@
   letter-spacing: -0.2px;
   margin-bottom: 8px;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -98,9 +98,16 @@
 }
 @media(max-width:900px){
   .carousel-slide { height: 280px; }
+  .carousel-title { font-size: clamp(13px, 3.5vw, 20px); -webkit-line-clamp: 1; }
+  .carousel-content { padding: 12px 14px 12px; }
+  .carousel-overlay { background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.4) 25%, rgba(0,0,0,0.0) 55%); }
 }
 @media(max-width:600px){
   .carousel-slide { height: 220px; }
+  .carousel-title { font-size: clamp(12px, 3.8vw, 17px); -webkit-line-clamp: 1; }
+  .carousel-content { padding: 10px 12px 10px; }
+  .carousel-badge .badge { font-size: 8px; padding: 2px 6px; }
+  .carousel-overlay { background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.4) 25%, rgba(0,0,0,0.0) 50%); }
 }
 </style>
 {% endblock %}
@@ -292,7 +299,6 @@
   let pausedAt   = 0;
   let elapsed    = 0;
 
-  /* ── Progress bar driven by rAF — no CSS transition ───── */
   function updateProg() {
     if (!prog || paused) return;
     const now  = Date.now();
@@ -312,7 +318,6 @@
     cancelAnimationFrame(rafId);
   }
 
-  /* ── Slide ─────────────────────────────────────────────── */
   function goto(idx) {
     slides[current].classList.remove('active');
     current = (idx + total) % total;
@@ -321,7 +326,6 @@
     slides[current].classList.add('active');
   }
 
-  /* ── Cycle ─────────────────────────────────────────────── */
   function startCycle() {
     clearTimeout(timer);
     stopProg();
@@ -332,7 +336,6 @@
     }, INTERVAL);
   }
 
-  /* ── Pause / Resume ────────────────────────────────────── */
   function pause() {
     if (paused) return;
     paused = true;
@@ -344,7 +347,6 @@
   function resume() {
     if (!paused) return;
     paused = false;
-    // Shift cycleStart forward by how long we were paused
     const pausedDuration = Date.now() - pausedAt;
     cycleStart += pausedDuration;
     const left = Math.max(50, INTERVAL - (Date.now() - cycleStart));
@@ -355,10 +357,8 @@
     }, left);
   }
 
-  /* ── Controls ──────────────────────────────────────────── */
   window.carouselGoto = function(e, idx) { e.preventDefault(); goto(idx); startCycle(); };
 
-  /* ── Touch & Mouse ─────────────────────────────────────── */
   var touchStartX = 0;
   if (wrap) {
     wrap.addEventListener('mouseenter', pause);
@@ -378,7 +378,6 @@
     }, { passive: true });
   }
 
-  /* ── Init ──────────────────────────────────────────────── */
   if (prog) prog.style.transition = 'none';
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
