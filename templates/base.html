@@ -298,12 +298,36 @@
   @media (max-width: 768px) {
     .nav-hamburger { display: flex; }
     .nav-links { display: none !important; }
-    .navbar-inner { gap: 8px; }
-    .nav-logo { font-size: 18px; }
-    #theme-label { display: none; }
-    #theme-toggle { padding: 5px 8px !important; gap: 0 !important; min-width: 32px; justify-content: center; }
+    .navbar-inner { gap: 8px; padding: 0 12px; }
+    .nav-logo { font-size: 18px; flex-shrink: 0; }
+    .search-wrap { flex: 1; min-width: 0; }
+    #theme-label { display: none !important; }
+    #theme-toggle {
+      padding: 6px 8px !important;
+      gap: 0 !important;
+      min-width: 34px;
+      justify-content: center;
+      flex-shrink: 0;
+    }
   }
   </style>
+  <!-- Schema: Organization (site-wide) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "FilmiFire",
+    "url": "https://filmifire.com",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://filmifire.com/static/favicon-32x32.png",
+      "width": 32,
+      "height": 32
+    },
+    "sameAs": ["https://filmifire.com"]
+  }
+  </script>
+  {% block schema %}{% endblock %}
   {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -417,7 +441,7 @@
       style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;
              padding:5px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;
              color:var(--muted);font-size:12px;font-family:var(--font-body);
-             transition:color 0.15s,border-color 0.15s;flex-shrink:0">
+             transition:color 0.15s,border-color 0.15s;flex-shrink:0;white-space:nowrap;">
       <span id="theme-icon">🌙</span>
       <span id="theme-label">Dark</span>
     </button>

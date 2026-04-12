@@ -5,6 +5,108 @@
 {% block og_title %}{{ article.title }}{% endblock %}
 {% block og_desc %}{{ article.excerpt or '' }}{% endblock %}
 {% block og_image %}{{ article.cover_img or '' }}{% endblock %}
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": {{ article.title | tojson }},
+  "description": {{ (article.excerpt or article.title) | tojson }},
+  "image": {
+    "@type": "ImageObject",
+    "url": {{ (article.cover_img or '') | tojson }},
+    "width": 1200,
+    "height": 675
+  },
+  "url": "https://filmifire.com/article/{{ article.slug }}",
+  "datePublished": "{{ article.published_at.strftime('%Y-%m-%dT%H:%M:%S+05:30') if article.published_at else '' }}",
+  "dateModified": "{{ (article.get('updated_at') or article.published_at).strftime('%Y-%m-%dT%H:%M:%S+05:30') if (article.get('updated_at') or article.published_at) else '' }}",
+  "author": {
+    "@type": "Person",
+    "name": {{ (article.get('author') or 'FilmiFire Desk') | tojson }}
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "FilmiFire",
+    "url": "https://filmifire.com",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://filmifire.com/static/favicon-32x32.png",
+      "width": 32,
+      "height": 32
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://filmifire.com/article/{{ article.slug }}"
+  },
+  "articleSection": {{ article.category | title | tojson }},
+  "keywords": {{ article.tags | join(', ') | tojson if article.tags else '""' }},
+  "inLanguage": "en-IN"
+}
+</script>
+
+{% if article.get('rating') %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Review",
+  "name": {{ article.title | tojson }},
+  "url": "https://filmifire.com/article/{{ article.slug }}",
+  "datePublished": "{{ article.published_at.strftime('%Y-%m-%dT%H:%M:%S+05:30') if article.published_at else '' }}",
+  "author": {
+    "@type": "Person",
+    "name": {{ (article.get('author') or 'FilmiFire Desk') | tojson }}
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "FilmiFire",
+    "url": "https://filmifire.com"
+  },
+  "reviewBody": {{ (article.excerpt or article.title) | tojson }},
+  "reviewRating": {
+    "@type": "Rating",
+    "ratingValue": "{{ article.rating }}",
+    "bestRating": "5",
+    "worstRating": "1"
+  },
+  "itemReviewed": {
+    "@type": "Movie",
+    "name": {{ (article.get('movie_name') or article.title) | tojson }},
+    "image": {{ (article.cover_img or '') | tojson }}
+  }
+}
+</script>
+{% endif %}
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://filmifire.com"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": {{ article.category | title | tojson }},
+      "item": "https://filmifire.com/category/{{ article.category }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": {{ article.title | tojson }},
+      "item": "https://filmifire.com/article/{{ article.slug }}"
+    }
+  ]
+}
+</script>
+{% endblock %}
+
 
 {% block content %}
 <div class="container">

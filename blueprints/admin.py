@@ -44,6 +44,15 @@ def unique_slug(db, base_slug, exclude_id=None):
         slug = f"{base_slug}-{counter}"
         counter += 1
 
+
+def parse_rating(val):
+    """Parse rating from form — returns int 1-5 or None"""
+    try:
+        r = int(val)
+        return r if 1 <= r <= 5 else None
+    except (TypeError, ValueError):
+        return None
+
 # ── Login / Logout ────────────────────────────────────────────────────────────
 @admin_bp.route("/login", methods=["GET", "POST"])
 def login():
@@ -104,6 +113,9 @@ def new_article():
         ticker = "ticker" in request.form
         carousel = "carousel" in request.form
         cover_img = request.form.get("cover_img_url", "").strip()
+        # Review fields
+        rating = parse_rating(request.form.get("rating", ""))
+        movie_name = request.form.get("movie_name", "").strip()
 
         # Handle image upload
         if "cover_img" in request.files:
@@ -143,6 +155,8 @@ def new_article():
             "pinned": pinned,
             "ticker": ticker,
             "carousel": carousel,
+            "rating": rating,
+            "movie_name": movie_name if movie_name else None,
             "views": 0,
             "created_at": datetime.datetime.utcnow(),
             "published_at": datetime.datetime.utcnow() if status == "published" else None,
@@ -180,6 +194,9 @@ def edit_article(article_id):
         ticker = "ticker" in request.form
         carousel = "carousel" in request.form
         cover_img = request.form.get("cover_img_url", art.get("cover_img", ""))
+        # Review fields
+        rating = parse_rating(request.form.get("rating", ""))
+        movie_name = request.form.get("movie_name", "").strip()
 
         if "cover_img" in request.files:
             f = request.files["cover_img"]
@@ -214,6 +231,8 @@ def edit_article(article_id):
             "pinned": pinned,
             "ticker": ticker,
             "carousel": carousel,
+            "rating": rating,
+            "movie_name": movie_name if movie_name else None,
             "updated_at": datetime.datetime.utcnow(),
         }
         if status == "published" and not art.get("published_at"):
