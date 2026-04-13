@@ -505,22 +505,7 @@ img { display: block; max-width: 100%; }
   white-space: nowrap;
 }
 .article-body tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
-/* Scroll wrapper — auto-applied via JS to all tables */
-.table-scroll-wrap {
-  display: block;
-  width: 100%;
-  overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch;
-  margin: 24px 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-.table-scroll-wrap table {
-  margin: 0;
-  border: none;
-  width: max-content;
-  min-width: 100%;
-}
+
 
 /* Tags */
 .tags-row {
@@ -1104,14 +1089,53 @@ img { display: block; max-width: 100%; }
   .hero { height: 320px; }
   .hero-content { padding: 20px; }
   .article-layout { padding: 24px 0 60px; }
-  /* Hide articles 7-9 on homepage mobile */
+  /* Hide articles 7+ on homepage mobile — show max 6 */
   .home-cards-grid .card:nth-child(n+7) { display: none; }
 }
 
-/* Prevent page scroll but allow table scroll */
+/* ── Horizontal scroll — desktop locked, mobile full page scroll ─────────────
+   Desktop: page never scrolls horizontally.
+   Mobile: page CAN scroll horizontally when table is wide.
+   Navbar and footer use 100vw so they always fill screen even when scrolled.
+*/
+
+/* Desktop: locked */
 html, body { max-width: 100%; }
-.navbar { overflow: visible; }
+.navbar { overflow: visible !important; }  /* must be visible for dropdown */
 .site-footer { overflow-x: hidden; }
+.article-body { min-width: 0; word-break: break-word; overflow-wrap: break-word; }
+
+/* Table wrapper — both desktop and mobile */
+.table-scroll-wrap {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  margin: 24px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.table-scroll-wrap table { margin: 0 !important; border: none; width: max-content; min-width: 100%; }
+
+/* Mobile: allow full page horizontal scroll for wide tables */
+@media (max-width: 768px) {
+  html, body { overflow-x: auto; }
+  /* Navbar sticks to left edge and fills full viewport width always */
+  .navbar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    min-width: 100vw;
+    z-index: 100;
+  }
+  /* Footer fills full viewport width */
+  .site-footer {
+    width: 100vw;
+    min-width: 100vw;
+    overflow-x: hidden;
+  }
+}
 
 /* Photo title always visible on touch/mobile */
 @media (hover: none) {
@@ -1302,6 +1326,46 @@ html, body { max-width: 100%; }
 @media (min-width: 769px) {
   .share-float { display: none !important; }
 }
+
+
+/* ── Emoji reactions ─────────────────────────────────────────────────────── */
+.reaction-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 32px 0 24px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.reaction-bar-title {
+  width: 100%;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.reaction-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-body);
+  color: var(--text);
+}
+.reaction-btn:hover { border-color: var(--accent); background: rgba(196,154,26,0.08); }
+.reaction-btn.reacted { border-color: var(--accent); background: rgba(196,154,26,0.12); font-weight: 500; }
+.reaction-count { font-size: 13px; font-weight: 500; color: var(--muted); min-width: 16px; }
+.reaction-btn.reacted .reaction-count { color: var(--accent); }
 
 /* ── Light mode ──────────────────────────────────────────────────────────── */
 html.dark-mode,

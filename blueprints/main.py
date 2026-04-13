@@ -45,18 +45,34 @@ def fmtdate_filter(dt):
 def reltime_filter(dt):
     return relative_time(dt)
 
+def smart_time(article):
+    """Shows Updated X ago if updated more than 1hr after publish, else published time"""
+    updated = article.get('updated_at')
+    published = article.get('published_at')
+    if updated and published:
+        diff = (updated - published).total_seconds()
+        if diff > 3600:
+            return ('updated', relative_time(updated))
+    return ('published', relative_time(published) if published else 'Draft')
+
+@main_bp.app_template_filter("smarttime")
+def smarttime_filter(article):
+    return smart_time(article)
+
+
+
 # ── Homepage ──────────────────────────────────────────────────────────────────
 @main_bp.route("/")
 def index():
     db = get_db()
     pinned = list(db.articles.find(
-        {"status": "published", "archived": {"$ne": True}, "pinned": True, "category": {"$ne": "photos"}},
+        {"status": "published", "archived": {"$ne": True}, "pinned": True},
         sort=[("published_at", -1)]
     ))
     pinned_ids = [a["_id"] for a in pinned]
-    remaining_limit = max(0, 9 - len(pinned))
+    remaining_limit = max(0, 15 - len(pinned))
     rest = list(db.articles.find(
-        {"status": "published", "archived": {"$ne": True}, "_id": {"$nin": pinned_ids}, "category": {"$ne": "photos"}},
+        {"status": "published", "archived": {"$ne": True}, "_id": {"$nin": pinned_ids}},
         sort=[("published_at", -1)],
         limit=remaining_limit
     ))
@@ -74,7 +90,7 @@ def index():
     slider_articles = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "carousel": True},
         sort=[("published_at", -1)],
-        limit=7
+        limit=8
     ))
     photo_articles = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "category": "photos"},
@@ -104,21 +120,9 @@ def article(slug):
     latest_news = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "category": "news"},
         sort=[("published_at", -1)],
-        limit=6
+        limit=8
     ))
-    photo_articles = list(db.articles.find(
-        {"status": "published", "archived": {"$ne": True}, "category": "photos"},
-        sort=[("published_at", -1)],
-        limit=6
-    ))
-    trending = list(db.articles.find(
-        {"status": "published", "archived": {"$ne": True}},
-        sort=[("views", -1)],
-        limit=5
-    ))
-    return render_template("article.html", article=art, related=related,
-                           latest_news=latest_news, photo_articles=photo_articles,
-                           trending=trending)
+    return render_template("article.html", article=art, related=related, latest_news=latest_news)
 
 # ── All articles page ─────────────────────────────────────────────────────────
 @main_bp.route("/articles")
@@ -182,18 +186,15 @@ def category(slug):
     total_pages = (total + per_page - 1) // per_page
     photo_articles = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "category": "photos"},
-        sort=[("published_at", -1)],
-        limit=6
+        sort=[("published_at", -1)], limit=6
     ))
     latest_news = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "category": "news"},
-        sort=[("published_at", -1)],
-        limit=6
+        sort=[("published_at", -1)], limit=6
     ))
     trending = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}},
-        sort=[("views", -1)],
-        limit=5
+        sort=[("views", -1)], limit=5
     ))
     return render_template("category.html",
         articles=articles,
@@ -302,7 +303,8 @@ def sitemap():
     xml.append(f"<url><loc>{base}/</loc></url>")
     for a in articles:
         loc = f"{base}/article/{a['slug']}"
-        lastmod = a.get("published_at", "").strftime("%Y-%m-%d") if a.get("published_at") else ""
+        lastmod_dt = a.get("updated_at") or a.get("published_at")
+        lastmod = lastmod_dt.strftime("%Y-%m-%d") if lastmod_dt else ""
         xml.append(f"<url><loc>{loc}</loc><lastmod>{lastmod}</lastmod></url>")
     xml.append("</urlset>")
     resp = make_response("\n".join(xml))

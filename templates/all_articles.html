@@ -19,8 +19,7 @@
   </div>
 
   <div class="home-layout">
-
-    <!-- Left: Articles -->
+    <!-- Main content -->
     <div>
       {% if articles %}
         <div class="cards-grid">
@@ -72,9 +71,10 @@
       {% endif %}
     </div>
 
-    <!-- Right sidebar -->
-    <aside>
+    <!-- Sidebar -->
+    <aside class="sidebar">
 
+      <!-- Photos grid -->
       {% if photo_articles %}
       <div class="photo-grid-block" style="margin-bottom:24px">
         <div class="photo-grid-header">
@@ -97,6 +97,7 @@
       </div>
       {% endif %}
 
+      <!-- Latest News -->
       {% if latest_news %}
       <div class="news-feed-block" style="margin-bottom:24px">
         <div class="news-feed-header">
@@ -118,6 +119,7 @@
       </div>
       {% endif %}
 
+      <!-- Trending -->
       {% if trending %}
       <div class="news-feed-block">
         <div class="news-feed-header">

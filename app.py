@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory, redirect, request
+from flask import Flask, redirect, request, send_from_directory
 from extensions import login_manager
 from config import Config
 from db import init_db, get_db
@@ -16,6 +16,18 @@ def create_app():
         if 'onrender.com' in request.host:
             url = 'https://filmifire.com' + request.full_path.rstrip('?')
             return redirect(url, 301)
+
+    # ── Fix 404 — redirect /home/ → / ────────────────────────────────────────
+    @app.route('/home/')
+    @app.route('/home')
+    def redirect_home():
+        return redirect('/', 301)
+
+    # ── robots.txt ────────────────────────────────────────────────────────────
+    @app.route('/robots.txt')
+    def robots():
+        return send_from_directory(app.static_folder, 'robots.txt')
+
 
     from blueprints.main import main_bp
     from blueprints.admin import admin_bp
@@ -38,19 +50,6 @@ def create_app():
             "categories": app.config["CATEGORIES"],
             "ticker_headlines": ticker_headlines
         }
-
-    # ── robots.txt ────────────────────────────────────────────────────────────
-    @app.route("/robots.txt")
-    def robots():
-        return send_from_directory(app.static_folder, "robots.txt")
-
-    # ── Close MongoDB connection after each request ───────────────────────────
-    @app.teardown_appcontext
-    def close_db(error):
-        from flask import g
-        client = g.pop('db_client', None)
-        if client is not None:
-            client.close()
 
     init_db(app)
     return app

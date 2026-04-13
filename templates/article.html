@@ -126,8 +126,14 @@
           {% if article.get('author') %}
             <span style="color:var(--text);font-weight:500">By {{ article.author }}</span>
           {% endif %}
-          <span title="{{ article.published_at | fmtdate if article.published_at else '' }}">
-            {{ article.published_at | reltime if article.published_at else 'Draft' }}
+          {% set timeinfo = article | smarttime %}
+          <span title="{{ article.published_at | fmtdate if article.published_at else '' }}"
+                style="{% if timeinfo[0] == 'updated' %}color:var(--accent){% endif %}">
+            {% if timeinfo[0] == 'updated' %}
+              🔄 Updated {{ timeinfo[1] }}
+            {% else %}
+              {{ timeinfo[1] }}
+            {% endif %}
           </span>
         </div>
 
@@ -154,6 +160,30 @@
 
       <div class="article-body">
         {{ article.body_html | safe }}
+      </div>
+
+
+      <!-- EMOJI REACTIONS -->
+      <div class="reaction-bar" id="reaction-bar">
+        <div class="reaction-bar-title">How did this article make you feel?</div>
+        <button class="reaction-btn" onclick="react('🔥')" id="react-fire">
+          <span>🔥</span><span class="reaction-count" id="count-fire">0</span>
+        </button>
+        <button class="reaction-btn" onclick="react('😮')" id="react-wow">
+          <span>😮</span><span class="reaction-count" id="count-wow">0</span>
+        </button>
+        <button class="reaction-btn" onclick="react('😂')" id="react-lol">
+          <span>😂</span><span class="reaction-count" id="count-lol">0</span>
+        </button>
+        <button class="reaction-btn" onclick="react('😢')" id="react-sad">
+          <span>😢</span><span class="reaction-count" id="count-sad">0</span>
+        </button>
+        <button class="reaction-btn" onclick="react('👏')" id="react-clap">
+          <span>👏</span><span class="reaction-count" id="count-clap">0</span>
+        </button>
+        <button class="reaction-btn" onclick="react('😡')" id="react-angry">
+          <span>😡</span><span class="reaction-count" id="count-angry">0</span>
+        </button>
       </div>
 
       <!-- BOTTOM SHARE BAR — icon + label, prominent -->
@@ -344,6 +374,48 @@ window.addEventListener('load', function() {
     window.instgrm.Embeds.process();
   }
 });
+
+
+// Emoji reactions — stored in localStorage per article
+(function() {
+  var slug = '{{ article.slug }}';
+  var key = 'reactions_' + slug;
+  var userKey = 'reacted_' + slug;
+  var emojis = {'fire':'🔥','wow':'😮','lol':'😂','sad':'😢','clap':'👏','angry':'😡'};
+
+  // Load counts from localStorage
+  var counts = JSON.parse(localStorage.getItem(key) || '{"fire":0,"wow":0,"lol":0,"sad":0,"clap":0,"angry":0}');
+  var userReaction = localStorage.getItem(userKey) || '';
+
+  function updateUI() {
+    Object.keys(emojis).forEach(function(e) {
+      var countEl = document.getElementById('count-' + e);
+      var btn = document.getElementById('react-' + e);
+      if (countEl) countEl.textContent = counts[e] || 0;
+      if (btn) btn.classList.toggle('reacted', userReaction === e);
+    });
+  }
+
+  window.react = function(emoji) {
+    var name = Object.keys(emojis).find(function(k) { return emojis[k] === emoji; });
+    if (!name) return;
+    if (userReaction === name) {
+      // Toggle off
+      counts[name] = Math.max(0, (counts[name] || 0) - 1);
+      userReaction = '';
+    } else {
+      // Remove previous reaction
+      if (userReaction) counts[userReaction] = Math.max(0, (counts[userReaction] || 0) - 1);
+      counts[name] = (counts[name] || 0) + 1;
+      userReaction = name;
+    }
+    localStorage.setItem(key, JSON.stringify(counts));
+    localStorage.setItem(userKey, userReaction);
+    updateUI();
+  };
+
+  document.addEventListener('DOMContentLoaded', updateUI);
+})();
 
 // Copy link
 function copyLink() {
