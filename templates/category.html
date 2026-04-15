@@ -35,7 +35,7 @@
                 <div class="card-excerpt">{{ art.excerpt }}</div>
               {% endif %}
               <div class="card-meta">
-                {{ art.published_at | reltime if art.published_at else "" }}
+                {{ art | cardtime }}
               </div>
             </div>
           </a>

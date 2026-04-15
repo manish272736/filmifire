@@ -59,6 +59,17 @@ def smart_time(article):
 def smarttime_filter(article):
     return smart_time(article)
 
+@main_bp.app_template_filter("cardtime")
+def cardtime_filter(article):
+    """For cards — shows updated time if updated, else published time"""
+    updated = article.get('updated_at')
+    published = article.get('published_at')
+    if updated and published:
+        diff = (updated - published).total_seconds()
+        if diff > 3600:
+            return '🔄 ' + relative_time(updated)
+    return relative_time(published) if published else 'Draft'
+
 
 
 # ── Homepage ──────────────────────────────────────────────────────────────────
@@ -120,9 +131,21 @@ def article(slug):
     latest_news = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "category": "news"},
         sort=[("published_at", -1)],
-        limit=8
+        limit=6
     ))
-    return render_template("article.html", article=art, related=related, latest_news=latest_news)
+    photo_articles = list(db.articles.find(
+        {"status": "published", "archived": {"$ne": True}, "category": "photos"},
+        sort=[("published_at", -1)],
+        limit=6
+    ))
+    trending = list(db.articles.find(
+        {"status": "published", "archived": {"$ne": True}},
+        sort=[("views", -1)],
+        limit=5
+    ))
+    return render_template("article.html", article=art, related=related,
+                           latest_news=latest_news, photo_articles=photo_articles,
+                           trending=trending)
 
 # ── All articles page ─────────────────────────────────────────────────────────
 @main_bp.route("/articles")

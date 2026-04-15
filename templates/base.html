@@ -544,6 +544,16 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
+<script>
+// Add no-ticker class to body when breaking news is absent
+(function() {
+  var ticker = document.getElementById('ticker-bar');
+  if (!ticker) {
+    document.body.classList.add('no-ticker');
+  }
+})();
+</script>
+
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
 <!-- Ticker script -->

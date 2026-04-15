@@ -35,7 +35,7 @@
 .carousel-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.0) 60%);
+  background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.0) 60%);
 }
 .carousel-content {
   position: absolute;
@@ -71,6 +71,27 @@
   color: rgba(255,255,255,0.5);
   font-family: var(--font-mono);
 }
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.15s;
+  z-index: 10;
+}
+.carousel-btn:hover { background: rgba(0,0,0,0.75); }
+.carousel-btn-prev { left: 10px; }
+.carousel-btn-next { right: 10px; }
 .carousel-dots {
   position: absolute;
   bottom: 12px;
@@ -139,6 +160,8 @@
           </a>
           {% endfor %}
         </div>
+        <button class="carousel-btn carousel-btn-prev" onclick="carouselPrev(event)">&#8249;</button>
+        <button class="carousel-btn carousel-btn-next" onclick="carouselNext(event)">&#8250;</button>
         <div class="carousel-dots" id="carousel-dots">
           {% for art in slider_articles %}
           <div class="carousel-dot {% if loop.first %}active{% endif %}"
@@ -175,7 +198,7 @@
               <div class="card-excerpt">{{ art.excerpt }}</div>
             {% endif %}
             <div class="card-meta">
-              {{ art.published_at | reltime if art.published_at else "" }}
+              {{ art | cardtime }}
             </div>
           </div>
         </a>
@@ -299,6 +322,7 @@
   let pausedAt   = 0;
   let elapsed    = 0;
 
+  /* ── Progress bar driven by rAF — no CSS transition ───── */
   function updateProg() {
     if (!prog || paused) return;
     const now  = Date.now();
@@ -318,6 +342,7 @@
     cancelAnimationFrame(rafId);
   }
 
+  /* ── Slide ─────────────────────────────────────────────── */
   function goto(idx) {
     slides[current].classList.remove('active');
     current = (idx + total) % total;
@@ -326,6 +351,7 @@
     slides[current].classList.add('active');
   }
 
+  /* ── Cycle ─────────────────────────────────────────────── */
   function startCycle() {
     clearTimeout(timer);
     stopProg();
@@ -336,6 +362,7 @@
     }, INTERVAL);
   }
 
+  /* ── Pause / Resume ────────────────────────────────────── */
   function pause() {
     if (paused) return;
     paused = true;
@@ -347,6 +374,7 @@
   function resume() {
     if (!paused) return;
     paused = false;
+    // Shift cycleStart forward by how long we were paused
     const pausedDuration = Date.now() - pausedAt;
     cycleStart += pausedDuration;
     const left = Math.max(50, INTERVAL - (Date.now() - cycleStart));
@@ -357,8 +385,12 @@
     }, left);
   }
 
+  /* ── Controls ──────────────────────────────────────────── */
+  window.carouselNext = function(e) { e.preventDefault(); goto(current + 1); startCycle(); };
+  window.carouselPrev = function(e) { e.preventDefault(); goto(current - 1); startCycle(); };
   window.carouselGoto = function(e, idx) { e.preventDefault(); goto(idx); startCycle(); };
 
+  /* ── Touch & Mouse ─────────────────────────────────────── */
   var touchStartX = 0;
   if (wrap) {
     wrap.addEventListener('mouseenter', pause);
@@ -378,6 +410,7 @@
     }, { passive: true });
   }
 
+  /* ── Init ──────────────────────────────────────────────── */
   if (prog) prog.style.transition = 'none';
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
