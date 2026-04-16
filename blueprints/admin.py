@@ -44,15 +44,6 @@ def unique_slug(db, base_slug, exclude_id=None):
         slug = f"{base_slug}-{counter}"
         counter += 1
 
-
-def parse_rating(val):
-    """Parse rating from form — returns int 1-5 or None"""
-    try:
-        r = int(val)
-        return r if 1 <= r <= 5 else None
-    except (TypeError, ValueError):
-        return None
-
 # ── Login / Logout ────────────────────────────────────────────────────────────
 @admin_bp.route("/login", methods=["GET", "POST"])
 def login():
@@ -113,9 +104,6 @@ def new_article():
         ticker = "ticker" in request.form
         carousel = "carousel" in request.form
         cover_img = request.form.get("cover_img_url", "").strip()
-        # Review fields
-        rating = parse_rating(request.form.get("rating", ""))
-        movie_name = request.form.get("movie_name", "").strip()
 
         # Handle image upload
         if "cover_img" in request.files:
@@ -155,8 +143,6 @@ def new_article():
             "pinned": pinned,
             "ticker": ticker,
             "carousel": carousel,
-            "rating": rating,
-            "movie_name": movie_name if movie_name else None,
             "views": 0,
             "created_at": datetime.datetime.utcnow(),
             "published_at": datetime.datetime.utcnow() if status == "published" else None,
@@ -194,9 +180,6 @@ def edit_article(article_id):
         ticker = "ticker" in request.form
         carousel = "carousel" in request.form
         cover_img = request.form.get("cover_img_url", art.get("cover_img", ""))
-        # Review fields
-        rating = parse_rating(request.form.get("rating", ""))
-        movie_name = request.form.get("movie_name", "").strip()
 
         if "cover_img" in request.files:
             f = request.files["cover_img"]
@@ -231,8 +214,6 @@ def edit_article(article_id):
             "pinned": pinned,
             "ticker": ticker,
             "carousel": carousel,
-            "rating": rating,
-            "movie_name": movie_name if movie_name else None,
             "updated_at": datetime.datetime.utcnow(),
         }
         if status == "published" and not art.get("published_at"):
@@ -294,6 +275,119 @@ def setup():
              style="display:block;width:100%;padding:8px;margin:8px 0">
       <button type="submit" style="padding:8px 20px">Create</button>
     </form>"""
+
+
+# ── Push Notifications ────────────────────────────────────────────────────────
+@admin_bp.route("/save-push-token", methods=["POST"])
+def save_push_token():
+    """Save FCM token from browser — called when user allows notifications"""
+    data = request.get_json()
+    token = data.get("token", "").strip() if data else ""
+    if not token:
+        return jsonify({"error": "No token"}), 400
+    db = get_db()
+    # Upsert — avoid duplicates
+    db.push_tokens.update_one(
+        {"token": token},
+        {"$set": {"token": token, "created_at": datetime.datetime.utcnow()}},
+        upsert=True
+    )
+    return jsonify({"ok": True})
+
+@admin_bp.route("/send-notification", methods=["POST"])
+@login_required
+def send_notification():
+    """Send push notification using FCM v1 API (Service Account)"""
+    import requests as http_requests
+    import json
+    import google.auth.transport.requests
+    import google.oauth2.service_account
+
+    data = request.get_json()
+    title = data.get("title", "FilmiFire").strip()
+    body  = data.get("body", "").strip()
+    url   = data.get("url", "https://filmifire.com").strip()
+
+    if not body:
+        return jsonify({"error": "Body required"}), 400
+
+    # Load service account JSON path from config
+    sa_path = current_app.config.get("FCM_SERVICE_ACCOUNT_PATH", "")
+    project_id = current_app.config.get("FCM_PROJECT_ID", "")
+    if not sa_path or not project_id:
+        return jsonify({"error": "FCM_SERVICE_ACCOUNT_PATH or FCM_PROJECT_ID not set in config"}), 500
+
+    # Get OAuth2 access token from service account
+    try:
+        credentials = google.oauth2.service_account.Credentials.from_service_account_file(
+            sa_path,
+            scopes=["https://www.googleapis.com/auth/firebase.messaging"]
+        )
+        auth_req = google.auth.transport.requests.Request()
+        credentials.refresh(auth_req)
+        access_token = credentials.token
+    except Exception as e:
+        return jsonify({"error": f"Auth failed: {str(e)}"}), 500
+
+    db = get_db()
+    tokens = [t["token"] for t in db.push_tokens.find({}, {"token": 1})]
+    if not tokens:
+        return jsonify({"sent": 0, "total": 0, "cleaned": 0})
+
+    fcm_url = f"https://fcm.googleapis.com/v1/projects/{project_id}/messages:send"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    sent = 0
+    failed_tokens = []
+
+    # FCM v1 sends one message at a time (no batch endpoint for tokens)
+    # Use multicast via legacy-compatible approach — send individually
+    for token in tokens:
+        payload = {
+            "message": {
+                "token": token,
+                "notification": {
+                    "title": title,
+                    "body": body
+                },
+                "webpush": {
+                    "notification": {
+                        "title": title,
+                        "body": body,
+                        "icon": "/static/favicon-32x32.png"
+                    },
+                    "fcm_options": {
+                        "link": url
+                    }
+                },
+                "data": {"url": url}
+            }
+        }
+        try:
+            resp = http_requests.post(fcm_url, json=payload, headers=headers, timeout=5)
+            if resp.status_code == 200:
+                sent += 1
+            elif resp.status_code == 404:
+                # Token not registered — mark for cleanup
+                failed_tokens.append(token)
+        except Exception:
+            pass
+
+    # Remove dead tokens
+    if failed_tokens:
+        db.push_tokens.delete_many({"token": {"$in": failed_tokens}})
+
+    return jsonify({"sent": sent, "total": len(tokens), "cleaned": len(failed_tokens)})
+
+@admin_bp.route("/push-subscriber-count")
+@login_required
+def push_subscriber_count():
+    db = get_db()
+    count = db.push_tokens.count_documents({})
+    return jsonify({"count": count})
 
 # ── Image upload for article body (Quill editor) ──────────────────────────────
 @admin_bp.route("/upload-image", methods=["POST"])

@@ -1197,16 +1197,17 @@ html, body {
     width: max-content;
     min-width: calc(100% - 48px);
     margin-left: 24px !important;
-    border-right: 24px solid transparent !important;
     box-sizing: content-box;
   }
   .table-scroll-wrap table th,
   .table-scroll-wrap table td {
     border: 1px solid var(--border);
   }
+  /* RIGHT BREATHING ROOM FIX — add 24px padding to last column cells */
   .table-scroll-wrap table th:last-child,
   .table-scroll-wrap table td:last-child {
     border-right: 1px solid var(--border);
+    padding-right: 28px;
   }
 }
 

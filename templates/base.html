@@ -18,12 +18,10 @@
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="{{ request.url }}">
-  <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
-  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-7R4LRJW99V"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -130,25 +128,15 @@
       transition: background 0.2s, transform 0.2s;
       cursor: pointer;
     }
-    .ticker-dot.active {
-      background: #fff;
-      transform: scale(1.3);
-    }
-    /* Mobile ticker fixes */
+    .ticker-dot.active { background: #fff; transform: scale(1.3); }
     @media (max-width: 600px) {
       .ticker-dots { display: none; }
       .ticker-nav { display: none; }
-      .ticker-label {
-        padding: 0 10px;
-        font-size: 10px;
-        letter-spacing: 0.05em;
-        gap: 5px;
-      }
+      .ticker-label { padding: 0 10px; font-size: 10px; letter-spacing: 0.05em; gap: 5px; }
       .ticker-label svg { display: none; }
       .ticker-slide { padding: 0 10px; }
       .ticker-slide a { font-size: 12px; }
     }
-
     /* ── Autocomplete ─────────────────────────────────────────────────── */
     .search-wrap { position: relative; flex-shrink: 0; }
     .suggest-box {
@@ -181,135 +169,103 @@
     .suggest-title { font-size: 13px; font-weight: 400; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .suggest-cat { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--accent); flex-shrink: 0; }
     .suggest-empty { padding: 12px 14px; font-size: 13px; color: var(--muted); }
-  /* ── Dropdown overflow fix ────────────────────────────────────────── */
-  .nav-links { overflow: visible !important; }
-  .nav-dropdown { position: relative; }
-  .nav-dropdown-menu { z-index: 9999 !important; }
-  .nav-dropdown-item.active { color: var(--accent); font-weight: 500; }
-
-  /* ── Hamburger button ─────────────────────────────────────────────── */
-  .nav-hamburger {
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    gap: 5px;
-    width: 36px;
-    height: 36px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    flex-shrink: 0;
-    border-radius: var(--radius);
-    transition: background 0.15s;
-  }
-  .nav-hamburger:hover { background: var(--surface2); }
-  .nav-hamburger span {
-    display: block;
-    width: 22px;
-    height: 2px;
-    background: var(--text);
-    border-radius: 2px;
-    transition: transform 0.25s, opacity 0.25s;
-  }
-  .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-  .nav-hamburger.open span:nth-child(2) { opacity: 0; }
-  .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
-  /* ── Mobile drawer ────────────────────────────────────────────────── */
-  .nav-drawer-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 998;
-  }
-  .nav-drawer-overlay.open { display: block; }
-  .nav-drawer {
-    position: fixed;
-    top: 0;
-    left: -280px;
-    width: 280px;
-    height: 100%;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    z-index: 999;
-    transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-  }
-  .nav-drawer.open { left: 0; }
-  .nav-drawer-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .nav-drawer-logo {
-    font-family: var(--font-display);
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--accent);
-  }
-  .nav-drawer-logo span { color: var(--text); }
-  .nav-drawer-close {
-    background: none;
-    border: none;
-    font-size: 22px;
-    cursor: pointer;
-    color: var(--muted);
-    line-height: 1;
-    padding: 4px;
-  }
-  .nav-drawer-links {
-    display: flex;
-    flex-direction: column;
-    padding: 12px 0;
-    flex: 1;
-  }
-  .nav-drawer-link {
-    display: block;
-    padding: 13px 24px;
-    font-size: 15px;
-    font-weight: 400;
-    color: var(--text);
-    text-decoration: none;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s, color 0.1s;
-  }
-  .nav-drawer-link:hover,
-  .nav-drawer-link.active {
-    background: var(--surface2);
-    color: var(--accent);
-  }
-  .nav-drawer-section {
-    padding: 10px 24px 4px;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    font-weight: 500;
-  }
-
-  /* ── Show hamburger on mobile, hide nav-links ─────────────────────── */
-  @media (max-width: 768px) {
-    .nav-hamburger { display: flex; }
-    .nav-links { display: none !important; }
-    .navbar-inner { gap: 8px; padding: 0 12px; }
-    .nav-logo { font-size: 18px; flex-shrink: 0; }
-    .search-wrap { flex: 1; min-width: 0; }
-    #theme-label { display: none !important; }
-    #theme-toggle {
-      padding: 6px 8px !important;
-      gap: 0 !important;
-      min-width: 34px;
+    /* ── Dropdown overflow fix ────────────────────────────────────────── */
+    .nav-links { overflow: visible !important; }
+    .nav-dropdown { position: relative; }
+    .nav-dropdown-menu { z-index: 9999 !important; }
+    .nav-dropdown-item.active { color: var(--accent); font-weight: 500; }
+    /* ── Hamburger button ─────────────────────────────────────────────── */
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
       justify-content: center;
+      gap: 5px;
+      width: 36px;
+      height: 36px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      flex-shrink: 0;
+      border-radius: var(--radius);
+      transition: background 0.15s;
+    }
+    .nav-hamburger:hover { background: var(--surface2); }
+    .nav-hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.25s, opacity 0.25s;
+    }
+    .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+    .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    /* ── Mobile drawer ────────────────────────────────────────────────── */
+    .nav-drawer-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 998;
+    }
+    .nav-drawer-overlay.open { display: block; }
+    .nav-drawer {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100%;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      z-index: 999;
+      transition: left 0.3s cubic-bezier(0.4,0,0.2,1);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .nav-drawer.open { left: 0; }
+    .nav-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
-  }
+    .nav-drawer-logo { font-family: var(--font-display); font-size: 20px; font-weight: 800; color: var(--accent); }
+    .nav-drawer-logo span { color: var(--text); }
+    .nav-drawer-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--muted); line-height: 1; padding: 4px; }
+    .nav-drawer-links { display: flex; flex-direction: column; padding: 12px 0; flex: 1; }
+    .nav-drawer-link {
+      display: block;
+      padding: 13px 24px;
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s, color 0.1s;
+    }
+    .nav-drawer-link:hover, .nav-drawer-link.active { background: var(--surface2); color: var(--accent); }
+    .nav-drawer-section {
+      padding: 10px 24px 4px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    @media (max-width: 768px) {
+      .nav-hamburger { display: flex; }
+      .nav-links { display: none !important; }
+      .navbar-inner { gap: 8px; padding: 0 12px; }
+      .nav-logo { font-size: 18px; flex-shrink: 0; }
+      .search-wrap { flex: 1; min-width: 0; }
+      #theme-label { display: none !important; }
+      #theme-toggle { padding: 6px 8px !important; gap: 0 !important; min-width: 34px; justify-content: center; flex-shrink: 0; }
+    }
   </style>
   <!-- Schema: Organization (site-wide) -->
   <script type="application/ld+json">
@@ -333,7 +289,6 @@
 <body>
 
 {% if ticker_headlines and ticker_headlines|length > 0 %}
-<!-- Breaking news ticker -->
 <div class="ticker-bar" id="ticker-bar">
   <div class="ticker-label">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -393,20 +348,14 @@
 <!-- Navbar -->
 <nav class="navbar">
   <div class="navbar-inner">
-    <!-- Hamburger (mobile only) -->
     <button class="nav-hamburger" id="hamburger-btn" onclick="openDrawer()" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
-
     <a href="{{ url_for('main.index') }}" class="nav-logo">Filmi<span>Fire</span></a>
-
-    <!-- Desktop links -->
     <div class="nav-links">
       <a href="{{ url_for('main.index') }}" class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">Home</a>
       <a href="{{ url_for('main.category', slug='news') }}" class="nav-link {% if request.view_args and request.view_args.get('slug') == 'news' %}active{% endif %}">News</a>
       <a href="{{ url_for('main.category', slug='photos') }}" class="nav-link {% if request.view_args and request.view_args.get('slug') == 'photos' %}active{% endif %}">Photos</a>
-
-      <!-- Industries dropdown -->
       {% set industry_slugs = ['bollywood', 'kollywood', 'tollywood', 'mollywood', 'sandalwood'] %}
       {% set is_industry = request.view_args and request.view_args.get('slug') in industry_slugs %}
       <div class="nav-dropdown" id="nav-industries">
@@ -421,7 +370,6 @@
           <a href="{{ url_for('main.category', slug='sandalwood') }}" class="nav-dropdown-item {% if request.view_args and request.view_args.get('slug') == 'sandalwood' %}active{% endif %}">Sandalwood</a>
         </div>
       </div>
-
       <a href="{{ url_for('main.category', slug='box-office') }}" class="nav-link {% if request.view_args and request.view_args.get('slug') == 'box-office' %}active{% endif %}">Box Office</a>
       <a href="{{ url_for('main.category', slug='records') }}" class="nav-link {% if request.view_args and request.view_args.get('slug') == 'records' %}active{% endif %}">Records</a>
     </div>
@@ -430,13 +378,10 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-        <input type="text" name="q" id="search-input" placeholder="Search movies…"
-               value="{{ request.args.get('q', '') }}">
+        <input type="text" name="q" id="search-input" placeholder="Search movies…" value="{{ request.args.get('q', '') }}">
       </form>
       <div class="suggest-box" id="suggest-box"></div>
     </div>
-
-    <!-- Theme toggle -->
     <button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode"
       style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;
              padding:5px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;
@@ -465,7 +410,6 @@
   {% block content %}{% endblock %}
 </main>
 
-<!-- Footer -->
 <footer class="site-footer">
   <div class="footer-top">
     <div class="container">
@@ -524,7 +468,6 @@
   </div>
 </footer>
 
-<!-- Drawer script -->
 <script>
 function openDrawer() {
   document.getElementById('nav-drawer').classList.add('open');
@@ -538,54 +481,44 @@ function closeDrawer() {
   document.getElementById('hamburger-btn').classList.remove('open');
   document.body.style.overflow = '';
 }
-// Close on Escape key
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeDrawer();
 });
 </script>
 
 <script>
-// Add no-ticker class to body when breaking news is absent
+// Add no-ticker class when breaking news is absent
 (function() {
   var ticker = document.getElementById('ticker-bar');
-  if (!ticker) {
-    document.body.classList.add('no-ticker');
-  }
+  if (!ticker) document.body.classList.add('no-ticker');
 })();
 </script>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
-<!-- Ticker script -->
 <script>
 (function() {
   const slides = document.getElementById('ticker-slides');
   const dots = document.querySelectorAll('.ticker-dot');
   if (!slides || !dots.length) return;
   const total = dots.length;
-  let current = 0;
-  let timer = null;
-
+  let current = 0, timer = null;
   function goto(idx) {
     current = (idx + total) % total;
     slides.style.transform = `translateX(-${current * 100}%)`;
     dots.forEach((d, i) => d.classList.toggle('active', i === current));
   }
-
   window.tickerNext = function() { goto(current + 1); resetTimer(); };
   window.tickerPrev = function() { goto(current - 1); resetTimer(); };
   window.tickerGoto = function(idx) { goto(idx); resetTimer(); };
-
   function resetTimer() {
     clearInterval(timer);
     timer = setInterval(() => goto(current + 1), 3000);
   }
-
   resetTimer();
 })();
 </script>
 
-<!-- Autocomplete script -->
 <script>
 (function() {
   const input = document.getElementById('search-input');
@@ -604,15 +537,8 @@ document.addEventListener('keydown', function(e) {
     try {
       const res = await fetch(`/api/suggest?q=${encodeURIComponent(q)}`);
       const data = await res.json();
-      if (!data.length) {
-        box.innerHTML = `<div class="suggest-empty">No results for "${q}"</div>`;
-        box.classList.add('open'); return;
-      }
-      box.innerHTML = data.map(a => `
-        <a class="suggest-item" href="/article/${a.slug}">
-          <span class="suggest-title">${a.title}</span>
-          <span class="suggest-cat">${a.category}</span>
-        </a>`).join('');
+      if (!data.length) { box.innerHTML = `<div class="suggest-empty">No results for "${q}"</div>`; box.classList.add('open'); return; }
+      box.innerHTML = data.map(a => `<a class="suggest-item" href="/article/${a.slug}"><span class="suggest-title">${a.title}</span><span class="suggest-cat">${a.category}</span></a>`).join('');
       box.classList.add('open'); activeIdx = -1;
     } catch(e) { close(); }
   }
@@ -633,7 +559,6 @@ document.addEventListener('keydown', function(e) {
 })();
 </script>
 
-<!-- Auto wrap tables in scroll container -->
 <script>
 function wrapTables() {
   var body = document.querySelector('.article-body');
@@ -661,7 +586,6 @@ function toggleTheme() {
   document.getElementById('theme-label').textContent = isDark ? 'Light' : 'Dark';
   localStorage.setItem('filmifire-theme', isDark ? 'dark' : 'light');
 }
-// Sync button state on load
 (function() {
   if (document.documentElement.classList.contains('dark-mode')) {
     const icon = document.getElementById('theme-icon');
@@ -670,6 +594,58 @@ function toggleTheme() {
     if (label) label.textContent = 'Light';
   }
 })();
+</script>
+
+<!-- Firebase Push Notifications -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB2SyciXeQJSkDKOyFUv8EBqgOFcB9e_rw",
+    authDomain: "filmifire-fa205.firebaseapp.com",
+    projectId: "filmifire-fa205",
+    storageBucket: "filmifire-fa205.firebasestorage.app",
+    messagingSenderId: "739326239723",
+    appId: "1:739326239723:web:3b58de0bf185599b066fae"
+  };
+  const VAPID_KEY = "BA48x35Zg1r88gxuL8fW9PRa4KbI7YYXHg3ZjHWBpW77i6sMLHc3sk5cbNPod_XdfCrT0vRypmPJgZ_a1FqQKOw";
+
+  if (location.protocol === 'https:') {
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+    navigator.serviceWorker.register('/static/firebase-messaging-sw.js')
+      .then(reg => {
+        setTimeout(() => {
+          if (Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+              if (permission === 'granted') {
+                getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg })
+                  .then(token => {
+                    if (token) {
+                      fetch('/admin/save-push-token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token })
+                      });
+                    }
+                  }).catch(err => console.log('Token error:', err));
+              }
+            });
+          }
+        }, 3000);
+      }).catch(err => console.log('SW registration failed:', err));
+
+    onMessage(messaging, payload => {
+      const { title, body } = payload.notification;
+      const url = payload.data?.url || '/';
+      if (Notification.permission === 'granted') {
+        const n = new Notification(title, { body, icon: '/static/favicon-32x32.png' });
+        n.onclick = () => { window.open(url, '_blank'); n.close(); };
+      }
+    });
+  }
 </script>
 </body>
 </html>

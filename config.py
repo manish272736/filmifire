@@ -1,6 +1,5 @@
 import os
 from dotenv import load_dotenv
-
 load_dotenv()
 
 class Config:
@@ -9,6 +8,10 @@ class Config:
     CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME")
     CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY")
     CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET")
+
+    # FCM Push Notifications (v1 API)
+    FCM_SERVICE_ACCOUNT_PATH = os.environ.get("FCM_SERVICE_ACCOUNT_PATH", "fcm-service-account.json")
+    FCM_PROJECT_ID = os.environ.get("FCM_PROJECT_ID", "filmifire-fa205")
 
     CATEGORIES = [
         {"slug": "news",       "label": "News"},

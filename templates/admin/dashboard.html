@@ -28,7 +28,22 @@
     .act-btn { font-size:12px; color:var(--muted); padding:4px 10px; border:1px solid var(--border); border-radius:3px; cursor:pointer; background:none; font-family:var(--font-body); transition:color 0.15s, border-color 0.15s; text-decoration:none; display:inline-block; margin-right:4px; }
     .act-btn:hover { color:var(--accent); border-color:var(--accent); }
     .act-btn.del:hover { color:#e74c3c; border-color:#e74c3c; }
-    @media(max-width:700px){ .stats-row{grid-template-columns:repeat(2,1fr);} }
+    /* Push notification panel */
+    .notif-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:28px; }
+    .notif-panel-title { font-size:13px; font-weight:500; color:var(--text); margin-bottom:14px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .notif-panel-title .sub-count { font-size:11px; color:var(--muted); font-weight:400; background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:2px 10px; }
+    .notif-row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+    .notif-field { display:flex; flex-direction:column; gap:5px; }
+    .notif-field label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; }
+    .notif-field input { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); padding:8px 12px; color:var(--text); font-family:var(--font-body); font-size:13px; outline:none; }
+    .notif-field input:focus { border-color:rgba(255,255,255,0.25); }
+    .notif-title-field input { min-width:180px; }
+    .notif-body-field input { min-width:300px; }
+    .notif-url-field input { min-width:240px; }
+    .btn-notify { background:var(--accent); color:#000; padding:9px 20px; border:none; border-radius:var(--radius); font-size:13px; font-weight:500; cursor:pointer; font-family:var(--font-body); transition:opacity 0.15s; white-space:nowrap; align-self:flex-end; }
+    .btn-notify:hover { opacity:0.85; }
+    #notif-status { font-size:12px; margin-top:10px; min-height:18px; }
+    @media(max-width:700px){ .stats-row{grid-template-columns:repeat(2,1fr);} .notif-body-field input,.notif-url-field input { min-width:100%; } }
   </style>
 </head>
 <body>
@@ -71,6 +86,30 @@
     {% endfor %}
   {% endwith %}
 
+  <!-- Push Notification Panel -->
+  <div class="notif-panel">
+    <div class="notif-panel-title">
+      🔔 Send Push Notification
+      <span class="sub-count" id="subscriber-count">Loading...</span>
+    </div>
+    <div class="notif-row">
+      <div class="notif-field notif-title-field">
+        <label>Title</label>
+        <input type="text" id="notif-title" placeholder="FilmiFire Breaking News" maxlength="50">
+      </div>
+      <div class="notif-field notif-body-field">
+        <label>Message *</label>
+        <input type="text" id="notif-body" placeholder="e.g. Dhurandhar crosses ₹500 Cr!" maxlength="120">
+      </div>
+      <div class="notif-field notif-url-field">
+        <label>Article URL</label>
+        <input type="text" id="notif-url" placeholder="https://filmifire.com/article/...">
+      </div>
+      <button class="btn-notify" onclick="sendNotification()">Send 🚀</button>
+    </div>
+    <div id="notif-status"></div>
+  </div>
+
   <!-- Articles table -->
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
     <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:500">
@@ -102,7 +141,9 @@
             <td>
               {% if art.status == 'published' and not art.get('archived') %}
                 <span class="status-pub">● Published</span>
-                {% if art.get('pinned') %}<span style="font-size:11px;color:var(--accent);margin-left:4px">📌</span>{% endif %}{% if art.get('ticker') %}<span style="font-size:11px;color:#e74c3c;margin-left:4px">🔴</span>{% endif %}{% if art.get('carousel') %}<span style="font-size:11px;color:#1a8cff;margin-left:4px">🎠</span>{% endif %}
+                {% if art.get('pinned') %}<span style="font-size:11px;color:var(--accent);margin-left:4px">📌</span>{% endif %}
+                {% if art.get('ticker') %}<span style="font-size:11px;color:#e74c3c;margin-left:4px">🔴</span>{% endif %}
+                {% if art.get('carousel') %}<span style="font-size:11px;color:#1a8cff;margin-left:4px">🎠</span>{% endif %}
               {% elif art.get('archived') %}
                 <span style="color:#e67e22;font-size:11px;text-transform:uppercase">⬤ Archived</span>
               {% else %}
@@ -142,5 +183,54 @@
   </div>
 
 </div>
+
+<script>
+// Load subscriber count
+fetch('/admin/push-subscriber-count')
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('subscriber-count').textContent =
+      d.count + ' subscriber' + (d.count !== 1 ? 's' : '');
+  }).catch(() => {
+    document.getElementById('subscriber-count').textContent = '0 subscribers';
+  });
+
+async function sendNotification() {
+  const title = document.getElementById('notif-title').value.trim() || 'FilmiFire';
+  const body  = document.getElementById('notif-body').value.trim();
+  const url   = document.getElementById('notif-url').value.trim() || 'https://filmifire.com';
+  const status = document.getElementById('notif-status');
+
+  if (!body) {
+    status.textContent = '✗ Message is required.';
+    status.style.color = '#e74c3c';
+    return;
+  }
+
+  status.textContent = 'Sending...';
+  status.style.color = 'var(--muted)';
+
+  try {
+    const resp = await fetch('/admin/send-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, body, url })
+    });
+    const data = await resp.json();
+    if (data.error) {
+      status.textContent = '✗ ' + data.error;
+      status.style.color = '#e74c3c';
+    } else {
+      status.textContent = `✓ Sent to ${data.sent} of ${data.total} subscribers${data.cleaned ? ' · ' + data.cleaned + ' invalid tokens removed' : ''}.`;
+      status.style.color = '#27ae60';
+      document.getElementById('notif-body').value = '';
+      document.getElementById('notif-url').value = '';
+    }
+  } catch(e) {
+    status.textContent = '✗ Network error. Try again.';
+    status.style.color = '#e74c3c';
+  }
+}
+</script>
 </body>
 </html>
