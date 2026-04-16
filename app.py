@@ -1,4 +1,5 @@
 from flask import Flask, redirect, request, send_from_directory
+import os
 from extensions import login_manager
 from config import Config
 from db import init_db, get_db
@@ -10,20 +11,30 @@ def create_app():
 
     login_manager.init_app(app)
 
-    # ── Redirect onrender.com → filmifire.com ─────────────────────────────────
+    # ── Redirect onrender.com → filmifire.com ─────────────────────────────
     @app.before_request
     def redirect_to_custom_domain():
-        if 'onrender.com' in request.host:
+        if request and 'onrender.com' in request.host:
             url = 'https://filmifire.com' + request.full_path.rstrip('?')
             return redirect(url, 301)
 
-    # ── Fix 404 — redirect /home/ → / ────────────────────────────────────────
+    # ── /home/ → / redirect (fix Google Search Console 404) ──────────────
     @app.route('/home/')
     @app.route('/home')
     def redirect_home():
         return redirect('/', 301)
 
-    # ── robots.txt ────────────────────────────────────────────────────────────
+    # ── Serve Firebase SW from ROOT so it can control all pages ──────────
+    # Critical: SW at /static/ only controls /static/* — useless for push
+    @app.route('/firebase-messaging-sw.js')
+    def firebase_sw():
+        return send_from_directory(
+            os.path.join(app.root_path, 'static'),
+            'firebase-messaging-sw.js',
+            mimetype='application/javascript'
+        )
+
+    # ── robots.txt ────────────────────────────────────────────────────────
     @app.route('/robots.txt')
     def robots():
         return send_from_directory(app.static_folder, 'robots.txt')

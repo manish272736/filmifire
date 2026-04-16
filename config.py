@@ -12,6 +12,8 @@ class Config:
     # FCM Push Notifications (v1 API)
     FCM_SERVICE_ACCOUNT_PATH = os.environ.get("FCM_SERVICE_ACCOUNT_PATH", "fcm-service-account.json")
     FCM_PROJECT_ID = os.environ.get("FCM_PROJECT_ID", "filmifire-fa205")
+    FCM_SERVICE_ACCOUNT_JSON = os.environ.get("FCM_SERVICE_ACCOUNT_JSON", "")
+    FCM_PROJECT_ID = os.environ.get("FCM_PROJECT_ID", "filmifire-fa205")
 
     CATEGORIES = [
         {"slug": "news",       "label": "News"},

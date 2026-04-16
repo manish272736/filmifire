@@ -44,6 +44,15 @@ def unique_slug(db, base_slug, exclude_id=None):
         slug = f"{base_slug}-{counter}"
         counter += 1
 
+
+def parse_rating(val):
+    """Parse rating from form — returns int 1-5 or None"""
+    try:
+        r = int(val)
+        return r if 1 <= r <= 5 else None
+    except (TypeError, ValueError):
+        return None
+
 # ── Login / Logout ────────────────────────────────────────────────────────────
 @admin_bp.route("/login", methods=["GET", "POST"])
 def login():
@@ -104,6 +113,8 @@ def new_article():
         ticker = "ticker" in request.form
         carousel = "carousel" in request.form
         cover_img = request.form.get("cover_img_url", "").strip()
+        rating = parse_rating(request.form.get("rating", ""))
+        movie_name = request.form.get("movie_name", "").strip()
 
         # Handle image upload
         if "cover_img" in request.files:
@@ -143,6 +154,8 @@ def new_article():
             "pinned": pinned,
             "ticker": ticker,
             "carousel": carousel,
+            "rating": rating,
+            "movie_name": movie_name if movie_name else None,
             "views": 0,
             "created_at": datetime.datetime.utcnow(),
             "published_at": datetime.datetime.utcnow() if status == "published" else None,
@@ -180,6 +193,8 @@ def edit_article(article_id):
         ticker = "ticker" in request.form
         carousel = "carousel" in request.form
         cover_img = request.form.get("cover_img_url", art.get("cover_img", ""))
+        rating = parse_rating(request.form.get("rating", ""))
+        movie_name = request.form.get("movie_name", "").strip()
 
         if "cover_img" in request.files:
             f = request.files["cover_img"]
@@ -214,6 +229,8 @@ def edit_article(article_id):
             "pinned": pinned,
             "ticker": ticker,
             "carousel": carousel,
+            "rating": rating,
+            "movie_name": movie_name if movie_name else None,
             "updated_at": datetime.datetime.utcnow(),
         }
         if status == "published" and not art.get("published_at"):
@@ -280,16 +297,15 @@ def setup():
 # ── Push Notifications ────────────────────────────────────────────────────────
 @admin_bp.route("/save-push-token", methods=["POST"])
 def save_push_token():
-    """Save FCM token from browser — called when user allows notifications"""
+    """Save FCM token — no login required, called from any visitor's browser"""
     data = request.get_json()
-    token = data.get("token", "").strip() if data else ""
+    token = (data.get("token", "") or "").strip() if data else ""
     if not token:
         return jsonify({"error": "No token"}), 400
     db = get_db()
-    # Upsert — avoid duplicates
     db.push_tokens.update_one(
         {"token": token},
-        {"$set": {"token": token, "created_at": datetime.datetime.utcnow()}},
+        {"$set": {"token": token, "updated_at": datetime.datetime.utcnow()}},
         upsert=True
     )
     return jsonify({"ok": True})
@@ -297,32 +313,47 @@ def save_push_token():
 @admin_bp.route("/send-notification", methods=["POST"])
 @login_required
 def send_notification():
-    """Send push notification using FCM v1 API (Service Account)"""
+    """Send push notification using FCM v1 API with Service Account"""
     import requests as http_requests
-    import json
     import google.auth.transport.requests
     import google.oauth2.service_account
+    import json
+    import os
 
     data = request.get_json()
-    title = data.get("title", "FilmiFire").strip()
-    body  = data.get("body", "").strip()
-    url   = data.get("url", "https://filmifire.com").strip()
+    title = (data.get("title") or "FilmiFire").strip()
+    body  = (data.get("body") or "").strip()
+    url   = (data.get("url") or "https://filmifire.com").strip()
 
     if not body:
-        return jsonify({"error": "Body required"}), 400
+        return jsonify({"error": "Message body is required"}), 400
 
-    # Load service account JSON path from config
-    sa_path = current_app.config.get("FCM_SERVICE_ACCOUNT_PATH", "")
-    project_id = current_app.config.get("FCM_PROJECT_ID", "")
-    if not sa_path or not project_id:
-        return jsonify({"error": "FCM_SERVICE_ACCOUNT_PATH or FCM_PROJECT_ID not set in config"}), 500
+    project_id = current_app.config.get("FCM_PROJECT_ID", "").strip()
+    if not project_id:
+        return jsonify({"error": "FCM_PROJECT_ID not set in environment variables"}), 500
 
-    # Get OAuth2 access token from service account
+    # Support two ways to provide service account:
+    # 1. FCM_SERVICE_ACCOUNT_JSON env var with the full JSON string (recommended for Render)
+    # 2. FCM_SERVICE_ACCOUNT_PATH file path (for local dev)
+    sa_json_str = current_app.config.get("FCM_SERVICE_ACCOUNT_JSON", "").strip()
+    sa_path = current_app.config.get("FCM_SERVICE_ACCOUNT_PATH", "").strip()
+
     try:
-        credentials = google.oauth2.service_account.Credentials.from_service_account_file(
-            sa_path,
-            scopes=["https://www.googleapis.com/auth/firebase.messaging"]
-        )
+        if sa_json_str:
+            # Parse JSON from env var directly
+            sa_info = json.loads(sa_json_str)
+            credentials = google.oauth2.service_account.Credentials.from_service_account_info(
+                sa_info,
+                scopes=["https://www.googleapis.com/auth/firebase.messaging"]
+            )
+        elif sa_path and os.path.exists(sa_path):
+            credentials = google.oauth2.service_account.Credentials.from_service_account_file(
+                sa_path,
+                scopes=["https://www.googleapis.com/auth/firebase.messaging"]
+            )
+        else:
+            return jsonify({"error": "No service account found. Set FCM_SERVICE_ACCOUNT_JSON in Render env vars"}), 500
+
         auth_req = google.auth.transport.requests.Request()
         credentials.refresh(auth_req)
         access_token = credentials.token
@@ -332,7 +363,7 @@ def send_notification():
     db = get_db()
     tokens = [t["token"] for t in db.push_tokens.find({}, {"token": 1})]
     if not tokens:
-        return jsonify({"sent": 0, "total": 0, "cleaned": 0})
+        return jsonify({"sent": 0, "total": 0, "cleaned": 0, "msg": "No subscribers yet"})
 
     fcm_url = f"https://fcm.googleapis.com/v1/projects/{project_id}/messages:send"
     headers = {
@@ -343,40 +374,35 @@ def send_notification():
     sent = 0
     failed_tokens = []
 
-    # FCM v1 sends one message at a time (no batch endpoint for tokens)
-    # Use multicast via legacy-compatible approach — send individually
     for token in tokens:
         payload = {
             "message": {
                 "token": token,
-                "notification": {
-                    "title": title,
-                    "body": body
-                },
+                "notification": {"title": title, "body": body},
                 "webpush": {
                     "notification": {
                         "title": title,
                         "body": body,
-                        "icon": "/static/favicon-32x32.png"
+                        "icon": "https://filmifire.com/static/favicon-32x32.png",
+                        "requireInteraction": False
                     },
-                    "fcm_options": {
-                        "link": url
-                    }
+                    "fcm_options": {"link": url}
                 },
                 "data": {"url": url}
             }
         }
         try:
-            resp = http_requests.post(fcm_url, json=payload, headers=headers, timeout=5)
+            resp = http_requests.post(fcm_url, json=payload, headers=headers, timeout=8)
             if resp.status_code == 200:
                 sent += 1
-            elif resp.status_code == 404:
-                # Token not registered — mark for cleanup
-                failed_tokens.append(token)
+            elif resp.status_code in (400, 404):
+                err = resp.json().get("error", {}).get("details", [{}])
+                error_code = err[0].get("errorCode", "") if err else ""
+                if error_code in ("UNREGISTERED", "INVALID_ARGUMENT"):
+                    failed_tokens.append(token)
         except Exception:
             pass
 
-    # Remove dead tokens
     if failed_tokens:
         db.push_tokens.delete_many({"token": {"$in": failed_tokens}})
 
