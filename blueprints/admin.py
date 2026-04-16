@@ -339,24 +339,29 @@ def send_notification():
     sa_path = current_app.config.get("FCM_SERVICE_ACCOUNT_PATH", "").strip()
 
     try:
-        if sa_json_str:
-            # Parse JSON from env var directly
-            sa_info = json.loads(sa_json_str)
-            credentials = google.oauth2.service_account.Credentials.from_service_account_info(
-                sa_info,
-                scopes=["https://www.googleapis.com/auth/firebase.messaging"]
-            )
-        elif sa_path and os.path.exists(sa_path):
+        # Priority 1: JSON file in project root (most reliable)
+        if sa_path and os.path.exists(sa_path):
             credentials = google.oauth2.service_account.Credentials.from_service_account_file(
                 sa_path,
                 scopes=["https://www.googleapis.com/auth/firebase.messaging"]
             )
+        # Priority 2: JSON string from env var (fallback for Render)
+        elif sa_json_str:
+            # Clean up the JSON string — remove leading/trailing whitespace and newlines
+            sa_json_clean = sa_json_str.strip()
+            sa_info = json.loads(sa_json_clean)
+            credentials = google.oauth2.service_account.Credentials.from_service_account_info(
+                sa_info,
+                scopes=["https://www.googleapis.com/auth/firebase.messaging"]
+            )
         else:
-            return jsonify({"error": "No service account found. Set FCM_SERVICE_ACCOUNT_JSON in Render env vars"}), 500
+            return jsonify({"error": "No service account found. Ensure fcm-service-account.json is in project root"}), 500
 
         auth_req = google.auth.transport.requests.Request()
         credentials.refresh(auth_req)
         access_token = credentials.token
+    except json.JSONDecodeError as e:
+        return jsonify({"error": f"Invalid service account JSON: {str(e)}"}), 500
     except Exception as e:
         return jsonify({"error": f"Auth failed: {str(e)}"}), 500
 

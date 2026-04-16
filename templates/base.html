@@ -420,17 +420,21 @@ function toggleTheme() {
   }
 })();
 </script>
-<!-- Push Notification Banner (shown to users who haven't decided yet) -->
-<div id="notif-banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
-  background:#1a1a1c;color:#fff;padding:14px 20px;border-radius:10px;z-index:9999;
-  box-shadow:0 4px 20px rgba(0,0,0,0.4);display:flex;align-items:center;gap:14px;
-  max-width:420px;width:calc(100% - 32px);font-family:sans-serif;font-size:13px;">
+
+<!-- Push Notification Banner — always starts hidden, JS controls visibility -->
+<div id="notif-banner" style="display:none;position:fixed;bottom:20px;left:50%;
+  transform:translateX(-50%);background:#1a1a1c;color:#fff;padding:14px 20px;
+  border-radius:10px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);
+  align-items:center;gap:14px;max-width:420px;width:calc(100% - 32px);
+  font-family:sans-serif;font-size:13px;">
   <span style="font-size:20px">🔔</span>
   <span style="flex:1;line-height:1.4">Get notified about breaking box office news!</span>
-  <button onclick="allowNotif()" style="background:#e8b84b;color:#000;border:none;padding:7px 14px;
-    border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">Allow</button>
-  <button onclick="dismissBanner()" style="background:none;border:none;color:rgba(255,255,255,0.5);
-    font-size:18px;cursor:pointer;padding:0 4px;line-height:1;">✕</button>
+  <button onclick="allowNotif()" style="background:#e8b84b;color:#000;border:none;
+    padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;
+    cursor:pointer;white-space:nowrap;">Allow</button>
+  <button onclick="dismissBanner()" style="background:none;border:none;
+    color:rgba(255,255,255,0.5);font-size:18px;cursor:pointer;padding:0 4px;
+    line-height:1;">✕</button>
 </div>
 
 <!-- Firebase Push Notifications -->
@@ -448,32 +452,84 @@ function toggleTheme() {
   };
   const VAPID_KEY = "BA48x35Zg1r88gxuL8fW9PRa4KbI7YYXHg3ZjHWBpW77i6sMLHc3sk5cbNPod_XdfCrT0vRypmPJgZ_a1FqQKOw";
 
+  async function getAndSaveToken(messaging, reg) {
+    try {
+      const token = await getToken(messaging, {
+        vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: reg
+      });
+      if (token) {
+        await fetch('/admin/save-push-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        console.log('FilmiFire: push token saved');
+      }
+    } catch(e) {
+      console.log('FilmiFire: token error', e.message);
+    }
+  }
+
+  function showBannerIfNeeded() {
+    // Never show if already decided
+    if (Notification.permission !== 'default') return;
+    // Never show twice in same session
+    if (sessionStorage.getItem('ff_banner_shown')) return;
+    // Never show if permanently dismissed
+    if (localStorage.getItem('ff_notif_dismissed')) return;
+    // Don't show if snoozed
+    const snoozed = localStorage.getItem('ff_notif_snoozed');
+    if (snoozed && Date.now() < parseInt(snoozed)) return;
+
+    // All checks passed — show after 5s delay
+    sessionStorage.setItem('ff_banner_shown', '1');
+    setTimeout(() => {
+      const banner = document.getElementById('notif-banner');
+      if (banner) banner.style.display = 'flex';
+    }, 5000);
+  }
+
+  window.allowNotif = async function() {
+    const banner = document.getElementById('notif-banner');
+    if (banner) banner.style.display = 'none';
+    localStorage.setItem('ff_notif_dismissed', '1');
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted' && window._swReg && window._messaging) {
+        await getAndSaveToken(window._messaging, window._swReg);
+      }
+    } catch(e) {
+      console.log('FilmiFire: permission error', e);
+    }
+  };
+
+  window.dismissBanner = function() {
+    const banner = document.getElementById('notif-banner');
+    if (banner) banner.style.display = 'none';
+    // Snooze 7 days
+    localStorage.setItem('ff_notif_snoozed', String(Date.now() + 7 * 24 * 60 * 60 * 1000));
+  };
+
   if (location.protocol === 'https:' && 'serviceWorker' in navigator && 'Notification' in window) {
     const app = initializeApp(firebaseConfig);
     const messaging = getMessaging(app);
 
-    // Register SW from ROOT (not /static/) — critical for scope to cover all pages
+    // CRITICAL: register from ROOT /firebase-messaging-sw.js
+    // (NOT /static/ — a SW at /static/ only controls /static/* pages)
     navigator.serviceWorker.register('/firebase-messaging-sw.js')
       .then(reg => {
         window._swReg = reg;
         window._messaging = messaging;
 
-        // If already granted, silently get/refresh token
         if (Notification.permission === 'granted') {
+          // Already allowed — silently refresh token
           getAndSaveToken(messaging, reg);
+        } else {
+          showBannerIfNeeded();
         }
-        // If not decided, show custom banner after 5s (not browser prompt directly)
-        else if (Notification.permission === 'default') {
-          const dismissed = localStorage.getItem('ff_notif_dismissed');
-          const snoozed = localStorage.getItem('ff_notif_snoozed');
-          if (!dismissed && (!snoozed || Date.now() > parseInt(snoozed))) {
-            setTimeout(() => {
-              const banner = document.getElementById('notif-banner');
-              if (banner) banner.style.display = 'flex';
-            }, 5000);
-          }
-        }
-      }).catch(err => console.log('SW registration failed:', err));
+      })
+      .catch(err => console.log('FilmiFire: SW registration failed', err));
 
     onMessage(messaging, payload => {
       const notif = payload.notification || {};
@@ -487,44 +543,6 @@ function toggleTheme() {
       }
     });
   }
-
-  async function getAndSaveToken(messaging, reg) {
-    try {
-      const token = await getToken(messaging, {
-        vapidKey: VAPID_KEY,
-        serviceWorkerRegistration: reg
-      });
-      if (token) {
-        await fetch('/admin/save-push-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token })
-        });
-      }
-    } catch(e) {
-      console.log('Token error:', e);
-    }
-  }
-
-  window.allowNotif = async function() {
-    const banner = document.getElementById('notif-banner');
-    if (banner) banner.style.display = 'none';
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted' && window._swReg && window._messaging) {
-        await getAndSaveToken(window._messaging, window._swReg);
-      }
-    } catch(e) {
-      console.log('Permission error:', e);
-    }
-  };
-
-  window.dismissBanner = function() {
-    const banner = document.getElementById('notif-banner');
-    if (banner) banner.style.display = 'none';
-    // Snooze for 3 days before showing again
-    localStorage.setItem('ff_notif_snoozed', Date.now() + 3 * 24 * 60 * 60 * 1000);
-  };
 </script>
 </body>
 </html>

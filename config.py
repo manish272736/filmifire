@@ -10,10 +10,11 @@ class Config:
     CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET")
 
     # FCM Push Notifications (v1 API)
+    # Uses the JSON file directly — more reliable than env var for multi-line JSON
     FCM_SERVICE_ACCOUNT_PATH = os.environ.get("FCM_SERVICE_ACCOUNT_PATH", "fcm-service-account.json")
     FCM_PROJECT_ID = os.environ.get("FCM_PROJECT_ID", "filmifire-fa205")
+    # FCM_SERVICE_ACCOUNT_JSON kept for fallback but file path is primary
     FCM_SERVICE_ACCOUNT_JSON = os.environ.get("FCM_SERVICE_ACCOUNT_JSON", "")
-    FCM_PROJECT_ID = os.environ.get("FCM_PROJECT_ID", "filmifire-fa205")
 
     CATEGORIES = [
         {"slug": "news",       "label": "News"},
