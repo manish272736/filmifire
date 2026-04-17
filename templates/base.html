@@ -421,20 +421,21 @@ function toggleTheme() {
 })();
 </script>
 
-<!-- Push Notification Banner — shows every page load during testing -->
-<div id="notif-banner" style="display:none;position:fixed;bottom:20px;left:50%;
-  transform:translateX(-50%);background:#1a1a1c;color:#fff;padding:14px 20px;
-  border-radius:10px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);
-  align-items:center;gap:14px;max-width:420px;width:calc(100% - 32px);
-  font-family:sans-serif;font-size:13px;">
-  <span style="font-size:20px">🔔</span>
-  <span style="flex:1;line-height:1.4">Get notified about breaking box office news!</span>
-  <button onclick="allowNotif()" style="background:#e8b84b;color:#000;border:none;
-    padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;
-    cursor:pointer;white-space:nowrap;">Allow</button>
-  <button onclick="dismissBanner()" style="background:none;border:none;
-    color:rgba(255,255,255,0.5);font-size:18px;cursor:pointer;padding:0 4px;
-    line-height:1;">✕</button>
+<!-- Push Notification Banner -->
+<div id="notif-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;
+  background:#1a1a1c;color:#fff;padding:16px 20px;z-index:9999;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.4);align-items:center;gap:14px;
+  font-family:sans-serif;font-size:13px;border-top:2px solid #e8b84b;">
+  <div style="display:flex;align-items:center;gap:12px;max-width:700px;margin:0 auto;width:100%;">
+    <span style="font-size:22px;flex-shrink:0">🔔</span>
+    <span style="flex:1;line-height:1.4">Get notified about breaking box office news &amp; updates!</span>
+    <button id="notif-allow-btn" style="background:#e8b84b;color:#000;border:none;
+      padding:9px 18px;border-radius:6px;font-size:13px;font-weight:600;
+      cursor:pointer;white-space:nowrap;flex-shrink:0;">Allow</button>
+    <button onclick="dismissBanner()" style="background:none;border:none;
+      color:rgba(255,255,255,0.5);font-size:22px;cursor:pointer;
+      padding:0 4px;line-height:1;flex-shrink:0;">✕</button>
+  </div>
 </div>
 
 <script type="module">
@@ -451,95 +452,107 @@ function toggleTheme() {
   };
   const VAPID_KEY = "BA48x35Zg1r88gxuL8fW9PRa4KbI7YYXHg3ZjHWBpW77i6sMLHc3sk5cbNPod_XdfCrT0vRypmPJgZ_a1FqQKOw";
 
-  // Only run on HTTPS
-  if (location.protocol !== 'https:') {
-    console.log('[FF Push] Not HTTPS — skipping');
-  } else if (!('serviceWorker' in navigator)) {
-    console.log('[FF Push] Service workers not supported');
-  } else if (!('Notification' in window)) {
-    console.log('[FF Push] Notifications not supported');
+  if (location.protocol !== 'https:' || !('serviceWorker' in navigator) || !('Notification' in window)) {
+    console.log('[FF Push] Push not supported on this browser/protocol');
   } else {
+
     const app = initializeApp(firebaseConfig);
     const messaging = getMessaging(app);
 
     async function saveToken(token) {
-      console.log('[FF Push] Saving token to server...');
       try {
         const resp = await fetch('/admin/save-push-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: token })
+          body: JSON.stringify({ token })
         });
         const data = await resp.json();
-        console.log('[FF Push] Token save response:', data);
+        console.log('[FF Push] Token saved:', data);
       } catch(e) {
-        console.error('[FF Push] Failed to save token:', e.message);
+        console.error('[FF Push] Save token failed:', e.message);
       }
     }
 
     async function getAndSaveToken(reg) {
-      console.log('[FF Push] Getting FCM token...');
       try {
         const token = await getToken(messaging, {
           vapidKey: VAPID_KEY,
           serviceWorkerRegistration: reg
         });
         if (token) {
-          console.log('[FF Push] Got token:', token.substring(0, 20) + '...');
+          console.log('[FF Push] Token obtained:', token.substring(0,20) + '...');
           await saveToken(token);
         } else {
-          console.log('[FF Push] No token returned — permission may be blocked');
+          console.log('[FF Push] No token — permission may be blocked in browser settings');
         }
       } catch(e) {
         console.error('[FF Push] getToken error:', e.message);
       }
     }
 
-    // Register SW from root (NOT /static/) — critical for scope
-    console.log('[FF Push] Registering service worker...');
-
-    // Use getRegistration first — avoids re-registering on every page load
-    // which can cause mobile Chrome issues
     async function initSW() {
       try {
-        // Check if SW already registered
         let reg = await navigator.serviceWorker.getRegistration('/');
         if (!reg) {
           reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-          console.log('[FF Push] SW newly registered, scope:', reg.scope);
+          console.log('[FF Push] SW registered, scope:', reg.scope);
         } else {
-          console.log('[FF Push] SW already registered, scope:', reg.scope);
-          // Force update check on mobile
           reg.update();
+          console.log('[FF Push] SW already active, scope:', reg.scope);
         }
         window._swReg = reg;
         window._messaging = messaging;
 
         if (Notification.permission === 'granted') {
-          console.log('[FF Push] Already granted — getting token');
+          // Already subscribed — refresh token silently
           await getAndSaveToken(reg);
+
         } else if (Notification.permission === 'denied') {
-          console.log('[FF Push] Permission denied by user');
+          console.log('[FF Push] Notifications blocked in browser settings');
+
         } else {
-          // Show banner — but respect 3-day snooze if user dismissed
+          // Default — show banner if not snoozed
           const snoozed = localStorage.getItem('ff_notif_snoozed');
           if (!snoozed || Date.now() > parseInt(snoozed)) {
+            // Longer delay on mobile to ensure page interaction has occurred
+            const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+            const delay = isMobile ? 4000 : 2000;
             setTimeout(() => {
               const banner = document.getElementById('notif-banner');
               if (banner) banner.style.display = 'flex';
-            }, 2000);
+            }, delay);
           }
         }
       } catch(err) {
-        console.error('[FF Push] SW init FAILED:', err.message);
+        console.error('[FF Push] SW init failed:', err.message);
       }
     }
 
-    initSW();
+    // Wire up Allow button AFTER DOM is ready — needs user gesture on mobile
+    document.addEventListener('DOMContentLoaded', function() {
+      const allowBtn = document.getElementById('notif-allow-btn');
+      if (allowBtn) {
+        allowBtn.addEventListener('click', async function() {
+          console.log('[FF Push] Allow clicked');
+          dismissBanner();
+          try {
+            // requestPermission MUST be called from a user gesture (click)
+            const permission = await Notification.requestPermission();
+            console.log('[FF Push] Permission:', permission);
+            if (permission === 'granted' && window._swReg) {
+              await getAndSaveToken(window._swReg);
+            } else if (permission === 'denied') {
+              console.log('[FF Push] User denied permission');
+            }
+          } catch(e) {
+            console.error('[FF Push] Permission request failed:', e.message);
+          }
+        });
+      }
+    });
 
-    // Handle messages when app is in foreground
+    // Handle foreground messages
     onMessage(messaging, payload => {
-      console.log('[FF Push] Foreground message:', payload);
       const notif = payload.notification || {};
       const url = payload.data?.url || '/';
       const n = new Notification(notif.title || 'FilmiFire', {
@@ -549,28 +562,21 @@ function toggleTheme() {
       n.onclick = () => { window.open(url, '_blank'); n.close(); };
     });
 
-    window.allowNotif = async function() {
-      console.log('[FF Push] User clicked Allow');
-      const banner = document.getElementById('notif-banner');
-      if (banner) banner.style.display = 'none';
-      try {
-        const permission = await Notification.requestPermission();
-        console.log('[FF Push] Permission result:', permission);
-        if (permission === 'granted' && window._swReg) {
-          await getAndSaveToken(window._swReg);
-        }
-      } catch(e) {
-        console.error('[FF Push] allowNotif error:', e.message);
-      }
-    };
-
-    window.dismissBanner = function() {
-      const banner = document.getElementById('notif-banner');
-      if (banner) banner.style.display = 'none';
-      // Snooze for 3 days before showing again
-      localStorage.setItem('ff_notif_snoozed', String(Date.now() + 3 * 24 * 60 * 60 * 1000));
-    };
+    // Start
+    initSW();
   }
+
+  window.dismissBanner = function() {
+    const banner = document.getElementById('notif-banner');
+    if (banner) banner.style.display = 'none';
+    // Snooze 3 days
+    localStorage.setItem('ff_notif_snoozed', String(Date.now() + 3 * 24 * 60 * 60 * 1000));
+  };
+
+  // Keep allowNotif as fallback
+  window.allowNotif = function() {
+    document.getElementById('notif-allow-btn')?.click();
+  };
 </script>
 
 </body>
