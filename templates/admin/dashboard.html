@@ -216,9 +216,22 @@ async function sendNotification() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, body, url })
     });
+    // Show HTTP status for debugging
+    if (!resp.ok) {
+      const text = await resp.text();
+      // Try parse as JSON first
+      try {
+        const errData = JSON.parse(text);
+        status.textContent = '✗ Server error ' + resp.status + ': ' + (errData.error || text.substring(0, 200));
+      } catch(_) {
+        status.textContent = '✗ Server error ' + resp.status + ': ' + text.substring(0, 200);
+      }
+      status.style.color = '#e74c3c';
+      return;
+    }
     const data = await resp.json();
     if (data.error) {
-      status.textContent = '✗ ' + data.error;
+      status.textContent = '✗ ' + data.error + (data.trace ? ' | ' + data.trace.substring(0, 100) : '');
       status.style.color = '#e74c3c';
     } else {
       status.textContent = `✓ Sent to ${data.sent} of ${data.total} subscribers${data.cleaned ? ' · ' + data.cleaned + ' invalid tokens removed' : ''}.`;
@@ -227,7 +240,7 @@ async function sendNotification() {
       document.getElementById('notif-url').value = '';
     }
   } catch(e) {
-    status.textContent = '✗ Network error. Try again.';
+    status.textContent = '✗ Fetch failed: ' + e.message + ' (check browser console)';
     status.style.color = '#e74c3c';
   }
 }

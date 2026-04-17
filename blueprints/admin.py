@@ -314,6 +314,13 @@ def save_push_token():
 @login_required
 def send_notification():
     """Send push notification using FCM v1 API with Service Account"""
+    try:
+        return _do_send_notification()
+    except Exception as e:
+        import traceback
+        return jsonify({"error": f"Unexpected error: {str(e)}", "trace": traceback.format_exc()[-500:]}), 500
+
+def _do_send_notification():
     import requests as http_requests
     import google.auth.transport.requests
     import google.oauth2.service_account
@@ -321,6 +328,8 @@ def send_notification():
     import os
 
     data = request.get_json()
+    if not data:
+        return jsonify({"error": "No JSON body sent"}), 400
     title = (data.get("title") or "FilmiFire").strip()
     body  = (data.get("body") or "").strip()
     url   = (data.get("url") or "https://filmifire.com").strip()
