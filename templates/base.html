@@ -164,6 +164,30 @@
 </head>
 <body>
 
+<!-- TEMP DEBUG PANEL — remove after testing -->
+<div id="ff-debug" style="display:none;position:fixed;top:0;left:0;right:0;
+  background:#000;color:#0f0;font-family:monospace;font-size:11px;
+  padding:8px;z-index:99999;max-height:200px;overflow-y:auto;opacity:0.9">
+  <div style="color:#ff0;font-weight:bold">FilmiFire Push Debug</div>
+  <div id="ff-debug-log"></div>
+</div>
+<script>
+// Show debug panel when URL has ?debug=push
+if (location.search.includes('debug=push')) {
+  document.getElementById('ff-debug').style.display = 'block';
+}
+window._ffLog = function(msg) {
+  const el = document.getElementById('ff-debug-log');
+  if (el) {
+    const line = document.createElement('div');
+    line.textContent = new Date().toISOString().slice(11,19) + ' ' + msg;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  }
+  console.log('[FF Push]', msg);
+};
+</script>
+
 {% if ticker_headlines and ticker_headlines|length > 0 %}
 <!-- Breaking news ticker -->
 <div class="ticker-bar" id="ticker-bar">
@@ -453,7 +477,7 @@ function toggleTheme() {
   const VAPID_KEY = "BA48x35Zg1r88gxuL8fW9PRa4KbI7YYXHg3ZjHWBpW77i6sMLHc3sk5cbNPod_XdfCrT0vRypmPJgZ_a1FqQKOw";
 
   if (location.protocol !== 'https:' || !('serviceWorker' in navigator) || !('Notification' in window)) {
-    console.log('[FF Push] Push not supported on this browser/protocol');
+    window._ffLog( Push not supported on this browser/protocol');
   } else {
 
     const app = initializeApp(firebaseConfig);
@@ -467,9 +491,9 @@ function toggleTheme() {
           body: JSON.stringify({ token })
         });
         const data = await resp.json();
-        console.log('[FF Push] Token saved:', data);
+        window._ffLog( Token saved:', data);
       } catch(e) {
-        console.error('[FF Push] Save token failed:', e.message);
+        window._ffLog('ERROR: Save token failed: ' + e.message);
       }
     }
 
@@ -480,13 +504,13 @@ function toggleTheme() {
           serviceWorkerRegistration: reg
         });
         if (token) {
-          console.log('[FF Push] Token obtained:', token.substring(0,20) + '...');
+          window._ffLog( Token obtained:', token.substring(0,20) + '...');
           await saveToken(token);
         } else {
-          console.log('[FF Push] No token — permission may be blocked in browser settings');
+          window._ffLog( No token — permission may be blocked in browser settings');
         }
       } catch(e) {
-        console.error('[FF Push] getToken error:', e.message);
+        window._ffLog('ERROR: getToken error: ' + e.message);
       }
     }
 
@@ -495,10 +519,10 @@ function toggleTheme() {
         let reg = await navigator.serviceWorker.getRegistration('/');
         if (!reg) {
           reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-          console.log('[FF Push] SW registered, scope:', reg.scope);
+          window._ffLog( SW registered, scope:', reg.scope);
         } else {
           reg.update();
-          console.log('[FF Push] SW already active, scope:', reg.scope);
+          window._ffLog( SW already active, scope:', reg.scope);
         }
         window._swReg = reg;
         window._messaging = messaging;
@@ -508,7 +532,7 @@ function toggleTheme() {
           await getAndSaveToken(reg);
 
         } else if (Notification.permission === 'denied') {
-          console.log('[FF Push] Notifications blocked in browser settings');
+          window._ffLog( Notifications blocked in browser settings');
 
         } else {
           // Default — show banner if not snoozed
@@ -524,7 +548,7 @@ function toggleTheme() {
           }
         }
       } catch(err) {
-        console.error('[FF Push] SW init failed:', err.message);
+        window._ffLog('ERROR: SW init failed: ' + err.message);
       }
     }
 
@@ -533,19 +557,19 @@ function toggleTheme() {
       const allowBtn = document.getElementById('notif-allow-btn');
       if (allowBtn) {
         allowBtn.addEventListener('click', async function() {
-          console.log('[FF Push] Allow clicked');
+          window._ffLog( Allow clicked');
           dismissBanner();
           try {
             // requestPermission MUST be called from a user gesture (click)
             const permission = await Notification.requestPermission();
-            console.log('[FF Push] Permission:', permission);
+            window._ffLog( Permission:', permission);
             if (permission === 'granted' && window._swReg) {
               await getAndSaveToken(window._swReg);
             } else if (permission === 'denied') {
-              console.log('[FF Push] User denied permission');
+              window._ffLog( User denied permission');
             }
           } catch(e) {
-            console.error('[FF Push] Permission request failed:', e.message);
+            window._ffLog('ERROR: Permission request failed: ' + e.message);
           }
         });
       }
