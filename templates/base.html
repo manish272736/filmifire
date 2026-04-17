@@ -449,7 +449,7 @@ function toggleTheme() {
     messagingSenderId: "739326239723",
     appId: "1:739326239723:web:3b58de0bf185599b066fae"
   };
-  const VAPID_KEY = "BIU3sSa8zbBJ0ARhrfM7pj5hhnxFnSgygMzDxswU7fc9R7nYbAowe_nBarcHNcBLMsOjTJAX34dD9LfPPif_bX0";
+  const VAPID_KEY = "BA48x35Zg1r88gxuL8fW9PRa4KbI7YYXHg3ZjHWBpW77i6sMLHc3sk5cbNPod_XdfCrT0vRypmPJgZ_a1FqQKOw";
 
   // Only run on HTTPS
   if (location.protocol !== 'https:') {
@@ -497,9 +497,21 @@ function toggleTheme() {
 
     // Register SW from root (NOT /static/) — critical for scope
     console.log('[FF Push] Registering service worker...');
-    navigator.serviceWorker.register('/firebase-messaging-sw.js')
-      .then(async reg => {
-        console.log('[FF Push] SW registered, scope:', reg.scope);
+
+    // Use getRegistration first — avoids re-registering on every page load
+    // which can cause mobile Chrome issues
+    async function initSW() {
+      try {
+        // Check if SW already registered
+        let reg = await navigator.serviceWorker.getRegistration('/');
+        if (!reg) {
+          reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          console.log('[FF Push] SW newly registered, scope:', reg.scope);
+        } else {
+          console.log('[FF Push] SW already registered, scope:', reg.scope);
+          // Force update check on mobile
+          reg.update();
+        }
         window._swReg = reg;
         window._messaging = messaging;
 
@@ -509,18 +521,21 @@ function toggleTheme() {
         } else if (Notification.permission === 'denied') {
           console.log('[FF Push] Permission denied by user');
         } else {
-          // Show banner every time during testing
-          console.log('[FF Push] Showing notification banner');
-          setTimeout(() => {
-            const banner = document.getElementById('notif-banner');
-            if (banner) banner.style.display = 'flex';
-          }, 2000);
+          // Show banner — but respect 3-day snooze if user dismissed
+          const snoozed = localStorage.getItem('ff_notif_snoozed');
+          if (!snoozed || Date.now() > parseInt(snoozed)) {
+            setTimeout(() => {
+              const banner = document.getElementById('notif-banner');
+              if (banner) banner.style.display = 'flex';
+            }, 2000);
+          }
         }
-      })
-      .catch(err => {
-        console.error('[FF Push] SW registration FAILED:', err.message);
-        console.error('[FF Push] Make sure /firebase-messaging-sw.js is accessible');
-      });
+      } catch(err) {
+        console.error('[FF Push] SW init FAILED:', err.message);
+      }
+    }
+
+    initSW();
 
     // Handle messages when app is in foreground
     onMessage(messaging, payload => {
@@ -552,7 +567,8 @@ function toggleTheme() {
     window.dismissBanner = function() {
       const banner = document.getElementById('notif-banner');
       if (banner) banner.style.display = 'none';
-      // TESTING MODE: no snooze — will show again on next load
+      // Snooze for 3 days before showing again
+      localStorage.setItem('ff_notif_snoozed', String(Date.now() + 3 * 24 * 60 * 60 * 1000));
     };
   }
 </script>
