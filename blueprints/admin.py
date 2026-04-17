@@ -420,6 +420,44 @@ def push_subscriber_count():
     count = db.push_tokens.count_documents({})
     return jsonify({"count": count})
 
+
+@admin_bp.route("/test-fcm-config")
+@login_required
+def test_fcm_config():
+    """Debug route — check FCM config is correct"""
+    import os, json
+    result = {}
+    sa_path = current_app.config.get("FCM_SERVICE_ACCOUNT_PATH", "")
+    sa_json = current_app.config.get("FCM_SERVICE_ACCOUNT_JSON", "")
+    project_id = current_app.config.get("FCM_PROJECT_ID", "")
+    
+    result["project_id"] = project_id or "NOT SET"
+    result["sa_path"] = sa_path
+    result["sa_path_exists"] = os.path.exists(sa_path) if sa_path else False
+    result["sa_json_length"] = len(sa_json)
+    result["sa_json_starts_with"] = sa_json[:30] if sa_json else "EMPTY"
+    
+    # Try parsing
+    if sa_path and os.path.exists(sa_path):
+        try:
+            with open(sa_path) as f:
+                data = json.load(f)
+            result["file_parse"] = "OK — project: " + data.get("project_id", "?")
+        except Exception as e:
+            result["file_parse"] = f"FAILED: {e}"
+    elif sa_json:
+        try:
+            data = json.loads(sa_json.strip())
+            result["json_parse"] = "OK — project: " + data.get("project_id", "?")
+        except Exception as e:
+            result["json_parse"] = f"FAILED: {e}"
+    
+    # Check subscriber count
+    db = get_db()
+    result["push_tokens_count"] = db.push_tokens.count_documents({})
+    
+    return jsonify(result)
+
 # ── Image upload for article body (Quill editor) ──────────────────────────────
 @admin_bp.route("/upload-image", methods=["POST"])
 @login_required

@@ -421,7 +421,7 @@ function toggleTheme() {
 })();
 </script>
 
-<!-- Push Notification Banner — always starts hidden, JS controls visibility -->
+<!-- Push Notification Banner — shows every page load during testing -->
 <div id="notif-banner" style="display:none;position:fixed;bottom:20px;left:50%;
   transform:translateX(-50%);background:#1a1a1c;color:#fff;padding:14px 20px;
   border-radius:10px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);
@@ -437,7 +437,6 @@ function toggleTheme() {
     line-height:1;">✕</button>
 </div>
 
-<!-- Firebase Push Notifications -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
@@ -450,99 +449,113 @@ function toggleTheme() {
     messagingSenderId: "739326239723",
     appId: "1:739326239723:web:3b58de0bf185599b066fae"
   };
-  const VAPID_KEY = "BA48x35Zg1r88gxuL8fW9PRa4KbI7YYXHg3ZjHWBpW77i6sMLHc3sk5cbNPod_XdfCrT0vRypmPJgZ_a1FqQKOw";
+  const VAPID_KEY = "BIU3sSa8zbBJ0ARhrfM7pj5hhnxFnSgygMzDxswU7fc9R7nYbAowe_nBarcHNcBLMsOjTJAX34dD9LfPPif_bX0";
 
-  async function getAndSaveToken(messaging, reg) {
-    try {
-      const token = await getToken(messaging, {
-        vapidKey: VAPID_KEY,
-        serviceWorkerRegistration: reg
-      });
-      if (token) {
-        await fetch('/admin/save-push-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token })
-        });
-        console.log('FilmiFire: push token saved');
-      }
-    } catch(e) {
-      console.log('FilmiFire: token error', e.message);
-    }
-  }
-
-  function showBannerIfNeeded() {
-    // Never show if already decided
-    if (Notification.permission !== 'default') return;
-    // Never show twice in same session
-    if (sessionStorage.getItem('ff_banner_shown')) return;
-    // Never show if permanently dismissed
-    if (localStorage.getItem('ff_notif_dismissed')) return;
-    // Don't show if snoozed
-    const snoozed = localStorage.getItem('ff_notif_snoozed');
-    if (snoozed && Date.now() < parseInt(snoozed)) return;
-
-    // All checks passed — show after 5s delay
-    sessionStorage.setItem('ff_banner_shown', '1');
-    setTimeout(() => {
-      const banner = document.getElementById('notif-banner');
-      if (banner) banner.style.display = 'flex';
-    }, 5000);
-  }
-
-  window.allowNotif = async function() {
-    const banner = document.getElementById('notif-banner');
-    if (banner) banner.style.display = 'none';
-    localStorage.setItem('ff_notif_dismissed', '1');
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted' && window._swReg && window._messaging) {
-        await getAndSaveToken(window._messaging, window._swReg);
-      }
-    } catch(e) {
-      console.log('FilmiFire: permission error', e);
-    }
-  };
-
-  window.dismissBanner = function() {
-    const banner = document.getElementById('notif-banner');
-    if (banner) banner.style.display = 'none';
-    // Snooze 7 days
-    localStorage.setItem('ff_notif_snoozed', String(Date.now() + 7 * 24 * 60 * 60 * 1000));
-  };
-
-  if (location.protocol === 'https:' && 'serviceWorker' in navigator && 'Notification' in window) {
+  // Only run on HTTPS
+  if (location.protocol !== 'https:') {
+    console.log('[FF Push] Not HTTPS — skipping');
+  } else if (!('serviceWorker' in navigator)) {
+    console.log('[FF Push] Service workers not supported');
+  } else if (!('Notification' in window)) {
+    console.log('[FF Push] Notifications not supported');
+  } else {
     const app = initializeApp(firebaseConfig);
     const messaging = getMessaging(app);
 
-    // CRITICAL: register from ROOT /firebase-messaging-sw.js
-    // (NOT /static/ — a SW at /static/ only controls /static/* pages)
+    async function saveToken(token) {
+      console.log('[FF Push] Saving token to server...');
+      try {
+        const resp = await fetch('/admin/save-push-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token })
+        });
+        const data = await resp.json();
+        console.log('[FF Push] Token save response:', data);
+      } catch(e) {
+        console.error('[FF Push] Failed to save token:', e.message);
+      }
+    }
+
+    async function getAndSaveToken(reg) {
+      console.log('[FF Push] Getting FCM token...');
+      try {
+        const token = await getToken(messaging, {
+          vapidKey: VAPID_KEY,
+          serviceWorkerRegistration: reg
+        });
+        if (token) {
+          console.log('[FF Push] Got token:', token.substring(0, 20) + '...');
+          await saveToken(token);
+        } else {
+          console.log('[FF Push] No token returned — permission may be blocked');
+        }
+      } catch(e) {
+        console.error('[FF Push] getToken error:', e.message);
+      }
+    }
+
+    // Register SW from root (NOT /static/) — critical for scope
+    console.log('[FF Push] Registering service worker...');
     navigator.serviceWorker.register('/firebase-messaging-sw.js')
-      .then(reg => {
+      .then(async reg => {
+        console.log('[FF Push] SW registered, scope:', reg.scope);
         window._swReg = reg;
         window._messaging = messaging;
 
         if (Notification.permission === 'granted') {
-          // Already allowed — silently refresh token
-          getAndSaveToken(messaging, reg);
+          console.log('[FF Push] Already granted — getting token');
+          await getAndSaveToken(reg);
+        } else if (Notification.permission === 'denied') {
+          console.log('[FF Push] Permission denied by user');
         } else {
-          showBannerIfNeeded();
+          // Show banner every time during testing
+          console.log('[FF Push] Showing notification banner');
+          setTimeout(() => {
+            const banner = document.getElementById('notif-banner');
+            if (banner) banner.style.display = 'flex';
+          }, 2000);
         }
       })
-      .catch(err => console.log('FilmiFire: SW registration failed', err));
+      .catch(err => {
+        console.error('[FF Push] SW registration FAILED:', err.message);
+        console.error('[FF Push] Make sure /firebase-messaging-sw.js is accessible');
+      });
 
+    // Handle messages when app is in foreground
     onMessage(messaging, payload => {
+      console.log('[FF Push] Foreground message:', payload);
       const notif = payload.notification || {};
       const url = payload.data?.url || '/';
-      if (Notification.permission === 'granted') {
-        const n = new Notification(notif.title || 'FilmiFire', {
-          body: notif.body || '',
-          icon: '/static/favicon-32x32.png'
-        });
-        n.onclick = () => { window.open(url, '_blank'); n.close(); };
-      }
+      const n = new Notification(notif.title || 'FilmiFire', {
+        body: notif.body || '',
+        icon: '/static/favicon-32x32.png'
+      });
+      n.onclick = () => { window.open(url, '_blank'); n.close(); };
     });
+
+    window.allowNotif = async function() {
+      console.log('[FF Push] User clicked Allow');
+      const banner = document.getElementById('notif-banner');
+      if (banner) banner.style.display = 'none';
+      try {
+        const permission = await Notification.requestPermission();
+        console.log('[FF Push] Permission result:', permission);
+        if (permission === 'granted' && window._swReg) {
+          await getAndSaveToken(window._swReg);
+        }
+      } catch(e) {
+        console.error('[FF Push] allowNotif error:', e.message);
+      }
+    };
+
+    window.dismissBanner = function() {
+      const banner = document.getElementById('notif-banner');
+      if (banner) banner.style.display = 'none';
+      // TESTING MODE: no snooze — will show again on next load
+    };
   }
 </script>
+
 </body>
 </html>
