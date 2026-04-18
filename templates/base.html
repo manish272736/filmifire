@@ -561,22 +561,7 @@ function toggleTheme() {
 })();
 </script>
 
-<!-- Push Notification Banner -->
-<div id="notif-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;
-  background:#1a1a1c;color:#fff;padding:14px 20px;z-index:9998;
-  box-shadow:0 -4px 20px rgba(0,0,0,0.4);align-items:center;gap:14px;
-  font-family:sans-serif;font-size:13px;border-top:2px solid #e8b84b;">
-  <div style="display:flex;align-items:center;gap:12px;max-width:700px;margin:0 auto;width:100%;">
-    <span style="font-size:22px;flex-shrink:0">🔔</span>
-    <span style="flex:1;line-height:1.4">Get notified about breaking box office news &amp; updates!</span>
-    <button id="notif-allow-btn" style="background:#e8b84b;color:#000;border:none;
-      padding:9px 18px;border-radius:6px;font-size:13px;font-weight:600;
-      cursor:pointer;white-space:nowrap;flex-shrink:0;">Allow</button>
-    <button onclick="dismissBanner()" style="background:none;border:none;
-      color:rgba(255,255,255,0.5);font-size:22px;cursor:pointer;
-      padding:0 4px;line-height:1;flex-shrink:0;">✕</button>
-  </div>
-</div>
+
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -656,13 +641,24 @@ function toggleTheme() {
         } else if (Notification.permission === 'denied') {
           window._ffLog('Notifications blocked in browser settings');
         } else {
+          // Direct prompt — single step like Times Now, no custom banner
           const snoozed = localStorage.getItem('ff_notif_snoozed');
           if (!snoozed || Date.now() > parseInt(snoozed)) {
-            const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-            setTimeout(() => {
-              const banner = document.getElementById('notif-banner');
-              if (banner) banner.style.display = 'flex';
-            }, isMobile ? 4000 : 2000);
+            setTimeout(async () => {
+              window._ffLog('Requesting permission directly...');
+              try {
+                const permission = await Notification.requestPermission();
+                window._ffLog('Permission: ' + permission);
+                if (permission === 'granted' && window._swReg) {
+                  await getAndSaveToken(window._swReg);
+                } else if (permission === 'denied' || permission === 'default') {
+                  // Snooze 3 days — don't ask again too soon
+                  localStorage.setItem('ff_notif_snoozed', String(Date.now() + 3 * 24 * 60 * 60 * 1000));
+                }
+              } catch(e) {
+                window._ffLog('Permission request failed: ' + e.message);
+              }
+            }, 5000);
           }
         }
       } catch(err) {
@@ -670,32 +666,7 @@ function toggleTheme() {
       }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-      const allowBtn = document.getElementById('notif-allow-btn');
-      if (allowBtn) {
-        allowBtn.addEventListener('click', async function() {
-          window._ffLog('Allow button tapped');
-          dismissBanner();
-          try {
-            const permission = await Notification.requestPermission();
-            window._ffLog('Permission result: ' + permission);
-            if (permission === 'granted') {
-              if (window._swReg) {
-                await getAndSaveToken(window._swReg);
-              } else {
-                window._ffLog('SW not ready — retrying in 1s');
-                setTimeout(async () => {
-                  let reg = await navigator.serviceWorker.getRegistration('/');
-                  if (reg) { window._swReg = reg; await getAndSaveToken(reg); }
-                }, 1000);
-              }
-            }
-          } catch(e) {
-            window._ffLog('Permission FAILED: ' + e.message);
-          }
-        });
-      }
-    });
+    // No custom banner listener needed — using direct browser prompt
 
     onMessage(messaging, payload => {
       const notif = payload.notification || {};
@@ -710,14 +681,7 @@ function toggleTheme() {
     initSW();
   }
 
-  window.dismissBanner = function() {
-    const banner = document.getElementById('notif-banner');
-    if (banner) banner.style.display = 'none';
-    localStorage.setItem('ff_notif_snoozed', String(Date.now() + 3 * 24 * 60 * 60 * 1000));
-  };
-  window.allowNotif = function() {
-    document.getElementById('notif-allow-btn')?.click();
-  };
+  // No custom banner to dismiss — browser handles it natively
 </script>
 </body>
 </html>
