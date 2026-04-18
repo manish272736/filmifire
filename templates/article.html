@@ -221,6 +221,18 @@
       </div>
       {% endif %}
 
+      <!-- More from category — internal linking for SEO -->
+      <div style="margin-top:8px;padding-top:20px;border-top:1px solid var(--border)">
+        <a href="{{ url_for('main.category', slug=article.category) }}"
+           style="display:inline-flex;align-items:center;gap:6px;font-size:13px;
+                  color:var(--muted);border:1px solid var(--border);border-radius:20px;
+                  padding:7px 16px;background:var(--surface);
+                  transition:color 0.15s,border-color 0.15s;text-decoration:none;">
+          More {{ article.category | title }} articles
+          <span style="font-size:15px">→</span>
+        </a>
+      </div>
+
     </article>
 
     <!-- Sidebar — always shows Photos, Related, Latest News, Trending -->
@@ -375,7 +387,6 @@ window.addEventListener('load', function() {
   }
 });
 
-
 // Emoji reactions — stored in localStorage per article
 (function() {
   var slug = '{{ article.slug }}';
@@ -383,7 +394,6 @@ window.addEventListener('load', function() {
   var userKey = 'reacted_' + slug;
   var emojis = {'fire':'🔥','wow':'😮','lol':'😂','sad':'😢','clap':'👏','angry':'😡'};
 
-  // Load counts from localStorage
   var counts = JSON.parse(localStorage.getItem(key) || '{"fire":0,"wow":0,"lol":0,"sad":0,"clap":0,"angry":0}');
   var userReaction = localStorage.getItem(userKey) || '';
 
@@ -400,11 +410,9 @@ window.addEventListener('load', function() {
     var name = Object.keys(emojis).find(function(k) { return emojis[k] === emoji; });
     if (!name) return;
     if (userReaction === name) {
-      // Toggle off
       counts[name] = Math.max(0, (counts[name] || 0) - 1);
       userReaction = '';
     } else {
-      // Remove previous reaction
       if (userReaction) counts[userReaction] = Math.max(0, (counts[userReaction] || 0) - 1);
       counts[name] = (counts[name] || 0) + 1;
       userReaction = name;
@@ -439,14 +447,13 @@ function toggleFloatShare() {
   btn.classList.toggle('active');
 }
 
-// Show float button only after scrolling 300px past top share bar
+// Show float button only after scrolling 300px
 var floatBtn = document.getElementById('share-float');
 window.addEventListener('scroll', function() {
   if (window.scrollY > 300) {
     floatBtn.classList.add('visible');
   } else {
     floatBtn.classList.remove('visible');
-    // Close menu when scrolled back to top
     document.getElementById('share-float-menu').classList.remove('open');
     document.getElementById('share-float-btn').classList.remove('active');
   }

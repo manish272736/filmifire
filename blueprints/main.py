@@ -71,7 +71,6 @@ def cardtime_filter(article):
     return relative_time(published) if published else 'Draft'
 
 
-
 # ── Homepage ──────────────────────────────────────────────────────────────────
 @main_bp.route("/")
 def index():
@@ -118,16 +117,37 @@ def article(slug):
     if not art:
         abort(404)
     db.articles.update_one({"_id": art["_id"]}, {"$inc": {"views": 1}})
-    related = list(db.articles.find(
-        {
-            "status": "published",
-            "archived": {"$ne": True},
-            "category": art["category"],
-            "_id": {"$ne": art["_id"]}
-        },
-        sort=[("published_at", -1)],
-        limit=4
-    ))
+
+    # ── Smarter related articles: tag-match first, then same-category ─────────
+    article_tags = art.get("tags", [])
+    related = []
+    if article_tags:
+        tag_matches = list(db.articles.find(
+            {
+                "status": "published",
+                "archived": {"$ne": True},
+                "_id": {"$ne": art["_id"]},
+                "tags": {"$in": article_tags}
+            },
+            sort=[("published_at", -1)],
+            limit=4
+        ))
+        related = tag_matches
+    # Fill remaining slots with same-category articles
+    if len(related) < 4:
+        existing_ids = [r["_id"] for r in related] + [art["_id"]]
+        cat_extras = list(db.articles.find(
+            {
+                "status": "published",
+                "archived": {"$ne": True},
+                "category": art["category"],
+                "_id": {"$nin": existing_ids}
+            },
+            sort=[("published_at", -1)],
+            limit=4 - len(related)
+        ))
+        related += cat_extras
+
     latest_news = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "category": "news"},
         sort=[("published_at", -1)],
@@ -319,7 +339,7 @@ def privacy():
 def sitemap():
     from flask import make_response
     db = get_db()
-    articles = list(db.articles.find({"status": "published"}, {"slug": 1, "published_at": 1}))
+    articles = list(db.articles.find({"status": "published"}, {"slug": 1, "published_at": 1, "updated_at": 1}))
     xml = ['<?xml version="1.0" encoding="UTF-8"?>',
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     base = request.host_url.rstrip("/")
