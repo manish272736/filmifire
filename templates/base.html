@@ -529,12 +529,17 @@ function toggleTheme() {
   };
   const VAPID_KEY = "BA48x35Zg1r88gxuL8fW9PRa4KbI7YYXHg3ZjHWBpW77i6sMLHc3sk5cbNPod_XdfCrT0vRypmPJgZ_a1FqQKOw";
 
-  if (location.protocol !== 'https:' || !('serviceWorker' in navigator) || !('Notification' in window)) {
-    window._ffLog( Push not supported on this browser/protocol');
-  } else {
+  window._ffLog('Protocol: ' + location.protocol);
+  window._ffLog('SW support: ' + ('serviceWorker' in navigator));
+  window._ffLog('Notif support: ' + ('Notification' in window));
+  window._ffLog('Permission: ' + (('Notification' in window) ? Notification.permission : 'N/A'));
 
+  if (location.protocol !== 'https:' || !('serviceWorker' in navigator) || !('Notification' in window)) {
+    window._ffLog('BLOCKED: missing required support');
+  } else {
     const app = initializeApp(firebaseConfig);
     const messaging = getMessaging(app);
+    window._messaging = messaging;
 
     async function saveToken(token) {
       try {
@@ -544,91 +549,89 @@ function toggleTheme() {
           body: JSON.stringify({ token })
         });
         const data = await resp.json();
-        window._ffLog( Token saved:', data);
+        window._ffLog('Token saved: ' + JSON.stringify(data));
       } catch(e) {
-        window._ffLog('ERROR: Save token failed: ' + e.message);
+        window._ffLog('Save token FAILED: ' + e.message);
       }
     }
 
     async function getAndSaveToken(reg) {
+      window._ffLog('Getting FCM token...');
       try {
         const token = await getToken(messaging, {
           vapidKey: VAPID_KEY,
           serviceWorkerRegistration: reg
         });
         if (token) {
-          window._ffLog( Token obtained:', token.substring(0,20) + '...');
+          window._ffLog('Token: ' + token.substring(0, 25) + '...');
           await saveToken(token);
         } else {
-          window._ffLog( No token — permission may be blocked in browser settings');
+          window._ffLog('No token returned');
         }
       } catch(e) {
-        window._ffLog('ERROR: getToken error: ' + e.message);
+        window._ffLog('getToken FAILED: ' + e.message);
       }
     }
 
     async function initSW() {
+      window._ffLog('Registering SW...');
       try {
         let reg = await navigator.serviceWorker.getRegistration('/');
         if (!reg) {
           reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-          window._ffLog( SW registered, scope:', reg.scope);
+          window._ffLog('SW registered, scope: ' + reg.scope);
         } else {
           reg.update();
-          window._ffLog( SW already active, scope:', reg.scope);
+          window._ffLog('SW already active, scope: ' + reg.scope);
         }
         window._swReg = reg;
-        window._messaging = messaging;
+        window._ffLog('_swReg set OK');
 
         if (Notification.permission === 'granted') {
-          // Already subscribed — refresh token silently
+          window._ffLog('Already granted — getting token');
           await getAndSaveToken(reg);
-
         } else if (Notification.permission === 'denied') {
-          window._ffLog( Notifications blocked in browser settings');
-
+          window._ffLog('Notifications blocked in browser settings');
         } else {
-          // Default — show banner if not snoozed
           const snoozed = localStorage.getItem('ff_notif_snoozed');
           if (!snoozed || Date.now() > parseInt(snoozed)) {
-            // Longer delay on mobile to ensure page interaction has occurred
             const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-            const delay = isMobile ? 4000 : 2000;
             setTimeout(() => {
               const banner = document.getElementById('notif-banner');
               if (banner) banner.style.display = 'flex';
-            }, delay);
+            }, isMobile ? 4000 : 2000);
           }
         }
       } catch(err) {
-        window._ffLog('ERROR: SW init failed: ' + err.message);
+        window._ffLog('SW init FAILED: ' + err.message);
       }
     }
 
-    // Wire up Allow button AFTER DOM is ready — needs user gesture on mobile
     document.addEventListener('DOMContentLoaded', function() {
       const allowBtn = document.getElementById('notif-allow-btn');
       if (allowBtn) {
         allowBtn.addEventListener('click', async function() {
-          window._ffLog( Allow clicked');
+          window._ffLog('Allow button tapped');
           dismissBanner();
           try {
-            // requestPermission MUST be called from a user gesture (click)
             const permission = await Notification.requestPermission();
-            window._ffLog( Permission:', permission);
+            window._ffLog('Permission result: ' + permission);
             if (permission === 'granted' && window._swReg) {
               await getAndSaveToken(window._swReg);
-            } else if (permission === 'denied') {
-              window._ffLog( User denied permission');
+            } else if (permission === 'granted' && !window._swReg) {
+              window._ffLog('SW not ready — retrying in 1s');
+              setTimeout(async () => {
+                let reg = await navigator.serviceWorker.getRegistration('/');
+                if (reg) { window._swReg = reg; await getAndSaveToken(reg); }
+              }, 1000);
             }
           } catch(e) {
-            window._ffLog('ERROR: Permission request failed: ' + e.message);
+            window._ffLog('Permission FAILED: ' + e.message);
           }
         });
       }
     });
 
-    // Handle foreground messages
     onMessage(messaging, payload => {
       const notif = payload.notification || {};
       const url = payload.data?.url || '/';
@@ -639,22 +642,18 @@ function toggleTheme() {
       n.onclick = () => { window.open(url, '_blank'); n.close(); };
     });
 
-    // Start
     initSW();
   }
 
   window.dismissBanner = function() {
     const banner = document.getElementById('notif-banner');
     if (banner) banner.style.display = 'none';
-    // Snooze 3 days
     localStorage.setItem('ff_notif_snoozed', String(Date.now() + 3 * 24 * 60 * 60 * 1000));
   };
 
-  // Keep allowNotif as fallback
   window.allowNotif = function() {
     document.getElementById('notif-allow-btn')?.click();
   };
 </script>
-
 </body>
 </html>
