@@ -199,65 +199,7 @@
 </head>
 <body>
 
-<!-- TEMP DEBUG PANEL — visit /?debug=push to activate -->
-<div id="ff-debug" style="display:none;position:fixed;top:0;left:0;right:0;
-  background:#000;color:#0f0;font-family:monospace;font-size:11px;
-  padding:8px;z-index:99999;max-height:50vh;overflow-y:auto;opacity:0.95">
-  <div style="color:#ff0;font-weight:bold;font-size:13px;margin-bottom:4px">
-    🔧 FilmiFire Push Debug
-    <button onclick="document.getElementById('ff-debug').style.display='none'"
-      style="float:right;background:#333;color:#fff;border:none;padding:2px 8px;cursor:pointer;font-size:12px">✕</button>
-  </div>
-  <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-    <button onclick="testPermission()" style="background:#0a0;color:#fff;border:none;padding:4px 10px;cursor:pointer;font-size:11px;border-radius:3px">▶ Request Permission</button>
-    <button onclick="testToken()" style="background:#00a;color:#fff;border:none;padding:4px 10px;cursor:pointer;font-size:11px;border-radius:3px">▶ Get Token</button>
-    <button onclick="document.getElementById('ff-debug-log').innerHTML=''" style="background:#555;color:#fff;border:none;padding:4px 10px;cursor:pointer;font-size:11px;border-radius:3px">Clear</button>
-  </div>
-  <div id="ff-debug-log"></div>
-</div>
-<script>
-if (location.search.includes('debug=push')) {
-  document.getElementById('ff-debug').style.display = 'block';
-}
-window._ffLog = function(msg) {
-  const el = document.getElementById('ff-debug-log');
-  if (el) {
-    const line = document.createElement('div');
-    line.style.cssText = 'border-bottom:1px solid #333;padding-bottom:2px;margin-bottom:2px';
-    line.textContent = new Date().toISOString().slice(11,19) + ' ' + msg;
-    el.appendChild(line);
-    el.scrollTop = el.scrollHeight;
-  }
-  console.log('[FF Push]', msg);
-};
-window.testPermission = async function() {
-  window._ffLog('Manual: requesting permission...');
-  try {
-    const p = await Notification.requestPermission();
-    window._ffLog('Manual: permission = ' + p);
-  } catch(e) { window._ffLog('Manual: FAILED = ' + e.message); }
-};
-window.testToken = async function() {
-  if (!window._swReg || !window._messaging) {
-    window._ffLog('Manual: SW not ready yet');
-    return;
-  }
-  window._ffLog('Manual: getting token...');
-  try {
-    const { getToken } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js");
-    const token = await getToken(window._messaging, {
-      vapidKey: "BO_USjYkyqa-WOlig2TsK-fEcBhcn9ac3mNfRCX_8xhBI4VefW-4Lx2C8S8hn3WrnR-sYU7yYO2dzJWQlabsIIk",
-      serviceWorkerRegistration: window._swReg
-    });
-    window._ffLog('Token: ' + (token ? token.substring(0,30)+'...' : 'NULL'));
-    if (token) {
-      const r = await fetch('/admin/save-push-token', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})});
-      const d = await r.json();
-      window._ffLog('Saved: ' + JSON.stringify(d));
-    }
-  } catch(e) { window._ffLog('FAILED: ' + e.message); }
-};
-</script>
+
 
 {% if ticker_headlines and ticker_headlines|length > 0 %}
 <div class="ticker-bar" id="ticker-bar">
@@ -577,13 +519,7 @@ function toggleTheme() {
   };
   const VAPID_KEY = "BO_USjYkyqa-WOlig2TsK-fEcBhcn9ac3mNfRCX_8xhBI4VefW-4Lx2C8S8hn3WrnR-sYU7yYO2dzJWQlabsIIk";
 
-  window._ffLog('Protocol: ' + location.protocol);
-  window._ffLog('SW support: ' + ('serviceWorker' in navigator));
-  window._ffLog('Notif support: ' + ('Notification' in window));
-  window._ffLog('Permission: ' + (('Notification' in window) ? Notification.permission : 'N/A'));
-
   if (location.protocol !== 'https:' || !('serviceWorker' in navigator) || !('Notification' in window)) {
-    window._ffLog('BLOCKED: missing required support');
   } else {
     const app = initializeApp(firebaseConfig);
     const messaging = getMessaging(app);
@@ -597,58 +533,58 @@ function toggleTheme() {
           body: JSON.stringify({ token })
         });
         const data = await resp.json();
-        window._ffLog('Token saved: ' + JSON.stringify(data));
+        console.log('[FF Push] ' + ('Token saved: ' + JSON.stringify(data));
       } catch(e) {
-        window._ffLog('Save token FAILED: ' + e.message);
+        console.log('[FF Push]', 'Save token FAILED: ' + e.message);
       }
     }
 
     async function getAndSaveToken(reg) {
-      window._ffLog('Getting FCM token...');
+      console.log('[FF Push]', 'Getting FCM token...');
       try {
         const token = await getToken(messaging, {
           vapidKey: VAPID_KEY,
           serviceWorkerRegistration: reg
         });
         if (token) {
-          window._ffLog('Token: ' + token.substring(0, 25) + '...');
+          console.log('[FF Push] ' + ('Token: ' + token.substring(0, 25) + '...');
           await saveToken(token);
         } else {
-          window._ffLog('No token returned');
+          console.log('[FF Push]', 'No token returned');
         }
       } catch(e) {
-        window._ffLog('getToken FAILED: ' + e.message);
+        console.log('[FF Push]', 'getToken FAILED: ' + e.message);
       }
     }
 
     async function initSW() {
-      window._ffLog('Registering SW...');
+      console.log('[FF Push]', 'Registering SW...');
       try {
         let reg = await navigator.serviceWorker.getRegistration('/');
         if (!reg) {
           reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-          window._ffLog('SW registered, scope: ' + reg.scope);
+          console.log('[FF Push]', 'SW registered, scope: ' + reg.scope);
         } else {
           reg.update();
-          window._ffLog('SW already active, scope: ' + reg.scope);
+          console.log('[FF Push]', 'SW already active, scope: ' + reg.scope);
         }
         window._swReg = reg;
-        window._ffLog('_swReg set OK');
+        console.log('[FF Push]', '_swReg set OK');
 
         if (Notification.permission === 'granted') {
-          window._ffLog('Already granted — getting token');
+          console.log('[FF Push]', 'Already granted — getting token');
           await getAndSaveToken(reg);
         } else if (Notification.permission === 'denied') {
-          window._ffLog('Notifications blocked in browser settings');
+          console.log('[FF Push]', 'Notifications blocked in browser settings');
         } else {
           // Direct prompt — single step like Times Now, no custom banner
           const snoozed = localStorage.getItem('ff_notif_snoozed');
           if (!snoozed || Date.now() > parseInt(snoozed)) {
             setTimeout(async () => {
-              window._ffLog('Requesting permission directly...');
+              console.log('[FF Push]', 'Requesting permission directly...');
               try {
                 const permission = await Notification.requestPermission();
-                window._ffLog('Permission: ' + permission);
+                console.log('[FF Push]', 'Permission: ' + permission);
                 if (permission === 'granted' && window._swReg) {
                   await getAndSaveToken(window._swReg);
                 } else if (permission === 'denied' || permission === 'default') {
@@ -656,13 +592,13 @@ function toggleTheme() {
                   localStorage.setItem('ff_notif_snoozed', String(Date.now() + 3 * 24 * 60 * 60 * 1000));
                 }
               } catch(e) {
-                window._ffLog('Permission request failed: ' + e.message);
+                console.log('[FF Push]', 'Permission request failed: ' + e.message);
               }
             }, 5000);
           }
         }
       } catch(err) {
-        window._ffLog('SW init FAILED: ' + err.message);
+        console.log('[FF Push]', 'SW init FAILED: ' + err.message);
       }
     }
 
