@@ -118,7 +118,7 @@ def article(slug):
         abort(404)
     db.articles.update_one({"_id": art["_id"]}, {"$inc": {"views": 1}})
 
-    # ── Smarter related articles: tag-match first, then same-category ─────────
+    # ── Smarter related articles: multi-tag relevance score first ───────────
     article_tags = art.get("tags", [])
     related = []
     if article_tags:
@@ -130,9 +130,13 @@ def article(slug):
                 "tags": {"$in": article_tags}
             },
             sort=[("published_at", -1)],
-            limit=4
+            limit=8  # fetch more, then re-rank by relevance
         ))
-        related = tag_matches
+        # Sort by number of matching tags — most relevant first
+        def tag_score(a):
+            return len(set(a.get("tags", [])).intersection(set(article_tags)))
+        tag_matches.sort(key=tag_score, reverse=True)
+        related = tag_matches[:4]
     # Fill remaining slots with same-category articles
     if len(related) < 4:
         existing_ids = [r["_id"] for r in related] + [art["_id"]]
