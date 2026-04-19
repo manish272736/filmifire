@@ -76,13 +76,13 @@ def cardtime_filter(article):
 def index():
     db = get_db()
     pinned = list(db.articles.find(
-        {"status": "published", "archived": {"$ne": True}, "pinned": True},
+        {"status": "published", "archived": {"$ne": True}, "pinned": True, "category": {"$ne": "photos"}},
         sort=[("published_at", -1)]
     ))
     pinned_ids = [a["_id"] for a in pinned]
     remaining_limit = max(0, 15 - len(pinned))
     rest = list(db.articles.find(
-        {"status": "published", "archived": {"$ne": True}, "_id": {"$nin": pinned_ids}},
+        {"status": "published", "archived": {"$ne": True}, "_id": {"$nin": pinned_ids}, "category": {"$ne": "photos"}},
         sort=[("published_at", -1)],
         limit=remaining_limit
     ))
