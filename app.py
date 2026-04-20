@@ -1,4 +1,4 @@
-from flask import Flask, redirect, request, send_from_directory
+from flask import Flask, redirect, request, send_from_directory, abort
 import os
 from extensions import login_manager
 from config import Config
@@ -8,7 +8,6 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50MB
-
     login_manager.init_app(app)
 
     # ── Redirect onrender.com → filmifire.com ─────────────────────────────
@@ -18,14 +17,13 @@ def create_app():
             url = 'https://filmifire.com' + request.full_path.rstrip('?')
             return redirect(url, 301)
 
-    # ── /home/ → / redirect (fix Google Search Console 404) ──────────────
+    # ── /home/ → 410 Gone (removes redirect error from Search Console) ────
     @app.route('/home/')
     @app.route('/home')
-    def redirect_home():
-        return redirect('/', 301)
+    def home_gone():
+        abort(410)
 
     # ── Serve Firebase SW from ROOT so it can control all pages ──────────
-    # Critical: SW at /static/ only controls /static/* — useless for push
     @app.route('/firebase-messaging-sw.js')
     def firebase_sw():
         return send_from_directory(
@@ -38,7 +36,6 @@ def create_app():
     @app.route('/robots.txt')
     def robots():
         return send_from_directory(app.static_folder, 'robots.txt')
-
 
     from blueprints.main import main_bp
     from blueprints.admin import admin_bp
