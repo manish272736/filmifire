@@ -5,6 +5,7 @@
 {% block og_title %}{{ article.title }}{% endblock %}
 {% block og_desc %}{{ article.excerpt or '' }}{% endblock %}
 {% block og_image %}{{ article.cover_img or '' }}{% endblock %}
+{% block og_type %}article{% endblock %}
 {% block schema %}
 <script type="application/ld+json">
 {
@@ -31,9 +32,9 @@
     "url": "https://filmifire.com",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://filmifire.com/static/favicon-32x32.png",
-      "width": 32,
-      "height": 32
+      "url": "https://filmifire.com/static/filmifire-logo-112.svg",
+      "width": 112,
+      "height": 112
     }
   },
   "mainEntityOfPage": {
@@ -162,7 +163,6 @@
         {{ article.body_html | safe }}
       </div>
 
-
       <!-- EMOJI REACTIONS -->
       <div class="reaction-bar" id="reaction-bar">
         <div class="reaction-bar-title">How did this article make you feel?</div>
@@ -235,10 +235,9 @@
 
     </article>
 
-    <!-- Sidebar — always shows Photos, Related, Latest News, Trending -->
+    <!-- Sidebar -->
     <aside class="sidebar">
 
-      <!-- Photos grid -->
       {% if photo_articles %}
       <div class="photo-grid-block" style="margin-bottom:24px">
         <div class="photo-grid-header">
@@ -261,7 +260,6 @@
       </div>
       {% endif %}
 
-      <!-- Related Articles -->
       {% if related %}
       <div class="news-feed-block" style="margin-bottom:24px">
         <div class="news-feed-header">
@@ -282,7 +280,6 @@
       </div>
       {% endif %}
 
-      <!-- Latest News -->
       {% if latest_news %}
       <div class="news-feed-block" style="margin-bottom:24px">
         <div class="news-feed-header">
@@ -306,7 +303,6 @@
       </div>
       {% endif %}
 
-      <!-- Trending -->
       {% if trending %}
       <div class="news-feed-block">
         <div class="news-feed-header">
@@ -365,7 +361,6 @@
 
 {% block extra_js %}
 <script>
-// Twitter/X embed — official async loader pattern
 window.twttr = (function(d, s, id) {
   var js, fjs = d.getElementsByTagName(s)[0], t = window.twttr || {};
   if (d.getElementById(id)) return t;
@@ -387,16 +382,13 @@ window.addEventListener('load', function() {
   }
 });
 
-// Emoji reactions — stored in localStorage per article
 (function() {
   var slug = '{{ article.slug }}';
   var key = 'reactions_' + slug;
   var userKey = 'reacted_' + slug;
   var emojis = {'fire':'🔥','wow':'😮','lol':'😂','sad':'😢','clap':'👏','angry':'😡'};
-
   var counts = JSON.parse(localStorage.getItem(key) || '{"fire":0,"wow":0,"lol":0,"sad":0,"clap":0,"angry":0}');
   var userReaction = localStorage.getItem(userKey) || '';
-
   function updateUI() {
     Object.keys(emojis).forEach(function(e) {
       var countEl = document.getElementById('count-' + e);
@@ -405,7 +397,6 @@ window.addEventListener('load', function() {
       if (btn) btn.classList.toggle('reacted', userReaction === e);
     });
   }
-
   window.react = function(emoji) {
     var name = Object.keys(emojis).find(function(k) { return emojis[k] === emoji; });
     if (!name) return;
@@ -421,11 +412,9 @@ window.addEventListener('load', function() {
     localStorage.setItem(userKey, userReaction);
     updateUI();
   };
-
   document.addEventListener('DOMContentLoaded', updateUI);
 })();
 
-// Copy link
 function copyLink() {
   navigator.clipboard.writeText(window.location.href).then(function() {
     var btns = document.querySelectorAll('.share-copy');
@@ -439,7 +428,6 @@ function copyLink() {
   });
 }
 
-// Floating share toggle
 function toggleFloatShare() {
   var menu = document.getElementById('share-float-menu');
   var btn = document.getElementById('share-float-btn');
@@ -447,7 +435,6 @@ function toggleFloatShare() {
   btn.classList.toggle('active');
 }
 
-// Show float button only after scrolling 300px
 var floatBtn = document.getElementById('share-float');
 window.addEventListener('scroll', function() {
   if (window.scrollY > 300) {
@@ -459,7 +446,6 @@ window.addEventListener('scroll', function() {
   }
 });
 
-// Close float menu on outside click
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.share-float')) {
     document.getElementById('share-float-menu').classList.remove('open');
@@ -467,6 +453,5 @@ document.addEventListener('click', function(e) {
   }
 });
 </script>
-<!-- Instagram embed -->
 <script async src="//www.instagram.com/embed.js"></script>
 {% endblock %}
