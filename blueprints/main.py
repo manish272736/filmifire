@@ -76,13 +76,15 @@ def cardtime_filter(article):
 def index():
     db = get_db()
     pinned = list(db.articles.find(
-        {"status": "published", "archived": {"$ne": True}, "pinned": True, "category": {"$ne": "photos"}},
+        {"status": "published", "archived": {"$ne": True}, "pinned": True,
+         "category": {"$nin": ["photos", "box-office"]}},
         sort=[("published_at", -1)]
     ))
     pinned_ids = [a["_id"] for a in pinned]
     remaining_limit = max(0, 15 - len(pinned))
     rest = list(db.articles.find(
-        {"status": "published", "archived": {"$ne": True}, "_id": {"$nin": pinned_ids}, "category": {"$ne": "photos"}},
+        {"status": "published", "archived": {"$ne": True}, "_id": {"$nin": pinned_ids},
+         "category": {"$nin": ["photos", "box-office"]}},
         sort=[("published_at", -1)],
         limit=remaining_limit
     ))
@@ -107,7 +109,12 @@ def index():
         sort=[("published_at", -1)],
         limit=4
     ))
-    return render_template("index.html", latest=latest, trending=trending, latest_news=latest_news, slider_articles=slider_articles, photo_articles=photo_articles)
+    boxoffice_articles = list(db.articles.find(
+        {"status": "published", "archived": {"$ne": True}, "category": "box-office"},
+        sort=[("published_at", -1)],
+        limit=10
+    ))
+    return render_template("index.html", latest=latest, trending=trending, latest_news=latest_news, slider_articles=slider_articles, photo_articles=photo_articles, boxoffice_articles=boxoffice_articles)
 
 # ── Article page ──────────────────────────────────────────────────────────────
 @main_bp.route("/article/<slug>")

@@ -1123,9 +1123,11 @@ html, body {
 }
 /* ── Mobile fixes ────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  html, body {
-    overflow-x: auto;
-    max-width: none;
+  html {
+    overflow-x: auto;  /* keep for wide-table articles */
+  }
+  body {
+    overflow-x: hidden;  /* prevent page-level horizontal scroll on normal pages */
   }
   .ticker-bar {
     position: fixed !important;
@@ -1209,6 +1211,11 @@ html, body {
     border-right: 1px solid var(--border);
     padding-right: 28px;
   }
+}
+
+/* Articles with wide tables need horizontal scroll restored */
+body.has-wide-table {
+  overflow-x: auto !important;
 }
 
 /* Photo title always visible on touch/mobile */

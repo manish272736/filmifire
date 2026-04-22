@@ -131,6 +131,156 @@
   .carousel-overlay { background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.4) 25%, rgba(0,0,0,0.0) 50%); }
   .carousel-btn { display: none; }
 }
+
+/* ── Box Office Strip ─────────────────────────────────────────────────── */
+.bo-strip-wrap {
+  margin-bottom: 28px;
+}
+.bo-strip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.bo-strip-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bo-strip-see-all {
+  font-size: 12px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.bo-strip-see-all:hover { opacity: 0.75; }
+.bo-strip-outer {
+  position: relative;
+}
+.bo-strip-scroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+.bo-strip-scroll::-webkit-scrollbar { display: none; }
+.bo-strip-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 15px;
+  z-index: 10;
+  transition: background 0.15s, border-color 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.bo-strip-arrow:hover { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
+.bo-strip-arrow-left  { left: -16px; }
+.bo-strip-arrow-right { right: -16px; }
+/* Arrows smaller on mobile but still visible */
+@media(max-width:600px){
+  .bo-strip-arrow { width: 26px; height: 26px; font-size: 13px; }
+  .bo-strip-arrow-left { left: -13px; }
+  .bo-strip-arrow-right { right: -13px; }
+}
+
+/* ── Box Office Card ──────────────────────────────────────────────────── */
+.bo-card {
+  flex-shrink: 0;
+  width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.2s, border-color 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+.bo-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(230,126,34,0.4);
+}
+.bo-card-thumb {
+  width: 100%;
+  height: 112px;
+  overflow: hidden;
+  background: var(--surface2);
+  flex-shrink: 0;
+}
+.bo-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.bo-card:hover .bo-card-thumb img { transform: scale(1.05); }
+.bo-card-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: var(--surface2);
+}
+.bo-card-body {
+  padding: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bo-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.15s;
+}
+.bo-card:hover .bo-card-title { color: var(--accent); }
+.bo-card-meta {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  margin-top: auto;
+}
+
+/* Mobile layout + overflow fix */
+@media(max-width:768px){
+  .home-layout { overflow-x: hidden; max-width: 100vw; width: 100%; }
+  .home-layout > div:first-child { overflow-x: hidden; max-width: 100%; min-width: 0; }
+  .carousel-wrap { max-width: 100%; width: 100%; }
+  .container { overflow-x: hidden; max-width: 100vw; }
+  .bo-strip-wrap { overflow: hidden; max-width: 100%; }
+  .bo-strip-outer { margin-left: 0; margin-right: 0; }
+  .bo-strip-scroll { padding-left: 4px; padding-right: 4px; overflow-x: auto; overflow-y: visible; max-width: 100%; }
+  .bo-card { width: 150px; flex-shrink: 0; }
+  .bo-card-thumb { height: 85px; }
+  .bo-card-title { font-size: 12px; }
+}
 </style>
 {% endblock %}
 
@@ -138,7 +288,7 @@
 <div class="container" style="padding-top:28px">
   <div class="home-layout">
 
-    <!-- Left: Carousel + Latest articles -->
+    <!-- Left: Carousel + Box Office Strip + Latest articles -->
     <div>
 
       <!-- Carousel -->
@@ -170,6 +320,39 @@
           {% endfor %}
         </div>
         <div class="carousel-progress" id="carousel-progress"></div>
+      </div>
+      {% endif %}
+
+      <!-- Box Office Strip -->
+      {% if boxoffice_articles and boxoffice_articles|length > 0 %}
+      <div class="bo-strip-wrap">
+        <div class="bo-strip-head">
+          <div class="bo-strip-title">
+            📊 Box Office
+          </div>
+          <a href="{{ url_for('main.category', slug='box-office') }}" class="bo-strip-see-all">See all →</a>
+        </div>
+        <div class="bo-strip-outer">
+          <button class="bo-strip-arrow bo-strip-arrow-left" onclick="boScroll(-1)" aria-label="Scroll left">&#8249;</button>
+          <div class="bo-strip-scroll" id="bo-strip-scroll">
+            {% for art in boxoffice_articles %}
+            <a href="{{ url_for('main.article', slug=art.slug) }}" class="bo-card">
+              <div class="bo-card-thumb">
+                {% if art.cover_img %}
+                  <img src="{{ art.cover_img }}" alt="{{ art.title }}" loading="lazy">
+                {% else %}
+                  <div class="bo-card-thumb-placeholder">📊</div>
+                {% endif %}
+              </div>
+              <div class="bo-card-body">
+                <div class="bo-card-title">{{ art.title }}</div>
+                <div class="bo-card-meta">{{ art.published_at | reltime if art.published_at else '' }}</div>
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+          <button class="bo-strip-arrow bo-strip-arrow-right" onclick="boScroll(1)" aria-label="Scroll right">&#8250;</button>
+        </div>
       </div>
       {% endif %}
 
@@ -321,13 +504,10 @@
   let cycleStart = 0;
   let paused     = false;
   let pausedAt   = 0;
-  let elapsed    = 0;
 
-  /* ── Progress bar driven by rAF — no CSS transition ───── */
   function updateProg() {
     if (!prog || paused) return;
-    const now  = Date.now();
-    const pct  = Math.min(100, ((now - cycleStart) / INTERVAL) * 100);
+    const pct = Math.min(100, ((Date.now() - cycleStart) / INTERVAL) * 100);
     prog.style.width = pct + '%';
     if (pct < 100) rafId = requestAnimationFrame(updateProg);
   }
@@ -339,11 +519,6 @@
     rafId = requestAnimationFrame(updateProg);
   }
 
-  function stopProg() {
-    cancelAnimationFrame(rafId);
-  }
-
-  /* ── Slide ─────────────────────────────────────────────── */
   function goto(idx) {
     slides[current].classList.remove('active');
     current = (idx + total) % total;
@@ -352,81 +527,65 @@
     slides[current].classList.add('active');
   }
 
-  /* ── Cycle ─────────────────────────────────────────────── */
   function startCycle() {
     clearTimeout(timer);
-    stopProg();
+    cancelAnimationFrame(rafId);
     startProg();
-    timer = setTimeout(function() {
-      goto(current + 1);
-      startCycle();
-    }, INTERVAL);
+    timer = setTimeout(function() { goto(current + 1); startCycle(); }, INTERVAL);
   }
 
-  /* ── Pause / Resume ────────────────────────────────────── */
   function pause() {
     if (paused) return;
     paused = true;
     pausedAt = Date.now();
     clearTimeout(timer);
-    stopProg();
+    cancelAnimationFrame(rafId);
   }
 
   function resume() {
     if (!paused) return;
     paused = false;
-    // Shift cycleStart forward by how long we were paused
     const pausedDuration = Date.now() - pausedAt;
     cycleStart += pausedDuration;
     const left = Math.max(50, INTERVAL - (Date.now() - cycleStart));
     rafId = requestAnimationFrame(updateProg);
-    timer = setTimeout(function() {
-      goto(current + 1);
-      startCycle();
-    }, left);
+    timer = setTimeout(function() { goto(current + 1); startCycle(); }, left);
   }
 
-  /* ── Controls ──────────────────────────────────────────── */
   window.carouselNext = function(e) { e.preventDefault(); goto(current + 1); startCycle(); };
   window.carouselPrev = function(e) { e.preventDefault(); goto(current - 1); startCycle(); };
   window.carouselGoto = function(e, idx) { e.preventDefault(); goto(idx); startCycle(); };
 
-  /* ── Touch & Mouse ─────────────────────────────────────── */
   var touchStartX = 0;
   if (wrap) {
     wrap.addEventListener('mouseenter', pause);
     wrap.addEventListener('mouseleave', resume);
     wrap.addEventListener('touchstart', function(e) {
-      touchStartX = e.changedTouches[0].screenX;
-      pause();
+      touchStartX = e.changedTouches[0].screenX; pause();
     }, { passive: true });
     wrap.addEventListener('touchend', function(e) {
       var diff = touchStartX - e.changedTouches[0].screenX;
-      if (Math.abs(diff) > 40) {
-        goto(diff > 0 ? current + 1 : current - 1);
-        startCycle();
-      } else {
-        resume();
-      }
+      if (Math.abs(diff) > 40) { goto(diff > 0 ? current + 1 : current - 1); startCycle(); }
+      else { resume(); }
     }, { passive: true });
   }
 
-  /* ── Init ──────────────────────────────────────────────── */
-  if (prog) prog.style.transition = 'none';
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
       track.style.transition = 'none';
       track.style.transform = 'translateX(0%)';
       slides[0].classList.add('active');
       if (dots[0]) dots[0].classList.add('active');
-      setTimeout(function() {
-        track.style.transition = '';
-        startCycle();
-      }, 50);
+      setTimeout(function() { track.style.transition = ''; startCycle(); }, 50);
     });
   });
-
 })();
+
+// Box Office strip scroll
+window.boScroll = function(dir) {
+  var el = document.getElementById('bo-strip-scroll');
+  if (el) el.scrollBy({ left: dir * 220, behavior: 'smooth' });
+};
 </script>
 {% endblock %}
 
