@@ -131,7 +131,7 @@
           <span title="{{ article.published_at | fmtdate if article.published_at else '' }}"
                 style="{% if timeinfo[0] == 'updated' %}color:var(--accent){% endif %}">
             {% if timeinfo[0] == 'updated' %}
-              🔄 Updated {{ timeinfo[1] }}
+              Updated {{ timeinfo[1] }}
             {% else %}
               {{ timeinfo[1] }}
             {% endif %}

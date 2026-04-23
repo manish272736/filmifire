@@ -61,13 +61,13 @@ def smarttime_filter(article):
 
 @main_bp.app_template_filter("cardtime")
 def cardtime_filter(article):
-    """For cards — shows updated time if updated, else published time"""
+    """For cards — shows updated time if updated more than 1hr after publish"""
     updated = article.get('updated_at')
     published = article.get('published_at')
     if updated and published:
         diff = (updated - published).total_seconds()
         if diff > 3600:
-            return '🔄 ' + relative_time(updated)
+            return 'Updated ' + relative_time(updated)
     return relative_time(published) if published else 'Draft'
 
 

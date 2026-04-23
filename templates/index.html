@@ -136,30 +136,7 @@
 .bo-strip-wrap {
   margin-bottom: 28px;
 }
-.bo-strip-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-.bo-strip-title {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.bo-strip-see-all {
-  font-size: 12px;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  text-decoration: none;
-  transition: opacity 0.15s;
-}
-.bo-strip-see-all:hover { opacity: 0.75; }
+
 .bo-strip-outer {
   position: relative;
 }
@@ -195,11 +172,11 @@
 .bo-strip-arrow:hover { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
 .bo-strip-arrow-left  { left: -16px; }
 .bo-strip-arrow-right { right: -16px; }
-/* Arrows smaller on mobile but still visible */
-@media(max-width:600px){
-  .bo-strip-arrow { width: 26px; height: 26px; font-size: 13px; }
-  .bo-strip-arrow-left { left: -13px; }
-  .bo-strip-arrow-right { right: -13px; }
+/* Arrows on mobile — inside the strip, no padding */
+@media(max-width:768px){
+  .bo-strip-arrow { width: 30px; height: 30px; font-size: 15px; }
+  .bo-strip-arrow-left { left: 3px; }
+  .bo-strip-arrow-right { right: 3px; }
 }
 
 /* ── Box Office Card ──────────────────────────────────────────────────── */
@@ -326,11 +303,10 @@
       <!-- Box Office Strip -->
       {% if boxoffice_articles and boxoffice_articles|length > 0 %}
       <div class="bo-strip-wrap">
-        <div class="bo-strip-head">
-          <div class="bo-strip-title">
-            📊 Box Office
-          </div>
-          <a href="{{ url_for('main.category', slug='box-office') }}" class="bo-strip-see-all">See all →</a>
+        <div class="section-head">
+          <h2>Box Office</h2>
+          <div class="line"></div>
+          <a href="{{ url_for('main.category', slug='box-office') }}" style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;text-decoration:none;white-space:nowrap;">See all →</a>
         </div>
         <div class="bo-strip-outer">
           <button class="bo-strip-arrow bo-strip-arrow-left" onclick="boScroll(-1)" aria-label="Scroll left">&#8249;</button>
@@ -346,7 +322,7 @@
               </div>
               <div class="bo-card-body">
                 <div class="bo-card-title">{{ art.title }}</div>
-                <div class="bo-card-meta">{{ art.published_at | reltime if art.published_at else '' }}</div>
+                <div class="bo-card-meta">{{ art | cardtime }}</div>
               </div>
             </a>
             {% endfor %}
