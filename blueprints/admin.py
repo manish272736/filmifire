@@ -9,6 +9,7 @@ import datetime
 import cloudinary
 import cloudinary.uploader
 from flask import current_app
+from indexnow import ping_indexnow, ping_indexnow_bulk
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -44,30 +45,16 @@ def unique_slug(db, base_slug, exclude_id=None):
         slug = f"{base_slug}-{counter}"
         counter += 1
 
-
 def parse_rating(val):
-    """Parse rating from form — returns int 1-5 or None"""
+    """Parse rating from form — returns float 0.5-5 in 0.5 steps, or None"""
     try:
-        r = int(val)
-        return r if 1 <= r <= 5 else None
+        r = float(val)
+        r = round(r * 2) / 2
+        return r if 0.5 <= r <= 5 else None
     except (TypeError, ValueError):
         return None
 
-# ── Login / Logout ────────────────────────────────────────────────────────────
-@admin_bp.route("/login", methods=["GET", "POST"])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for("admin.dashboard"))
-    if request.method == "POST":
-        db = get_db()
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "").encode()
-        user_doc = db.admins.find_one({"email": email})
-        if user_doc and bcrypt.checkpw(password, user_doc["pw_hash"]):
-            login_user(AdminUser(user_doc))
-            return redirect(url_for("admin.dashboard"))
-        flash("Invalid email or password.", "error")
-    return render_template("admin/login.html")
+# ── IndexNow — ping Bing/Yahoo when articles are published ───────────────────
 
 @admin_bp.route("/logout")
 @login_required
@@ -116,7 +103,6 @@ def new_article():
         rating = parse_rating(request.form.get("rating", ""))
         movie_name = request.form.get("movie_name", "").strip()
 
-        # Handle image upload
         if "cover_img" in request.files:
             f = request.files["cover_img"]
             if f and f.filename:
@@ -161,6 +147,10 @@ def new_article():
             "published_at": datetime.datetime.utcnow() if status == "published" else None,
         }
         db.articles.insert_one(doc)
+
+        if status == "published":
+            ping_indexnow(slug)
+
         flash("Article saved!", "success")
         return redirect(url_for("admin.dashboard"))
     return render_template("admin/editor.html",
@@ -237,6 +227,10 @@ def edit_article(article_id):
             update["published_at"] = datetime.datetime.utcnow()
 
         db.articles.update_one({"_id": ObjectId(article_id)}, {"$set": update})
+
+        if status == "published":
+            ping_indexnow(art.get("slug", ""))
+
         flash("Article updated!", "success")
         return redirect(url_for("admin.dashboard"))
 
@@ -271,7 +265,7 @@ def archive_article(article_id):
     flash("Article archived." if new_status else "Article restored to active.", "info")
     return redirect(url_for("admin.dashboard"))
 
-# ── Create first admin (run once, then remove this route) ────────────────────
+# ── Bulk IndexNow ping — visit once to submit all existing articles ───────────
 @admin_bp.route("/setup", methods=["GET", "POST"])
 def setup():
     db = get_db()
@@ -294,10 +288,28 @@ def setup():
     </form>"""
 
 
+# ── IndexNow bulk ping (run once after setup) ─────────────────────────────────
+@admin_bp.route("/ping-indexnow-all")
+@login_required
+def ping_indexnow_all():
+    """Ping Bing IndexNow for ALL published articles — run once after setup"""
+    db = get_db()
+    articles = list(db.articles.find(
+        {"status": "published", "archived": {"$ne": True}},
+        {"slug": 1}
+    ))
+    slugs = [a["slug"] for a in articles if a.get("slug")]
+    result = ping_indexnow_bulk(slugs)
+    return jsonify({
+        "total_articles": len(slugs),
+        "sent": result.get("sent", 0),
+        "ok": result.get("ok", False),
+        "error": result.get("error", None)
+    })
+
 # ── Push Notifications ────────────────────────────────────────────────────────
 @admin_bp.route("/save-push-token", methods=["POST"])
 def save_push_token():
-    """Save FCM token — no login required, called from any visitor's browser"""
     data = request.get_json()
     token = (data.get("token", "") or "").strip() if data else ""
     if not token:
@@ -313,7 +325,6 @@ def save_push_token():
 @admin_bp.route("/send-notification", methods=["POST"])
 @login_required
 def send_notification():
-    """Send push notification using FCM v1 API with Service Account"""
     try:
         return _do_send_notification()
     except Exception as e:
@@ -339,67 +350,53 @@ def _do_send_notification():
 
     project_id = current_app.config.get("FCM_PROJECT_ID", "").strip()
     if not project_id:
-        return jsonify({"error": "FCM_PROJECT_ID not set in environment variables"}), 500
+        return jsonify({"error": "FCM_PROJECT_ID not set"}), 500
 
-    # Support two ways to provide service account:
-    # 1. FCM_SERVICE_ACCOUNT_JSON env var with the full JSON string (recommended for Render)
-    # 2. FCM_SERVICE_ACCOUNT_PATH file path (for local dev)
     sa_json_str = current_app.config.get("FCM_SERVICE_ACCOUNT_JSON", "").strip()
     sa_path = current_app.config.get("FCM_SERVICE_ACCOUNT_PATH", "").strip()
 
     try:
-        # Priority 1: JSON file in project root (most reliable)
         if sa_path and os.path.exists(sa_path):
             credentials = google.oauth2.service_account.Credentials.from_service_account_file(
                 sa_path,
                 scopes=["https://www.googleapis.com/auth/firebase.messaging"]
             )
-        # Priority 2: JSON string from env var (fallback for Render)
         elif sa_json_str:
-            # Clean up the JSON string — remove leading/trailing whitespace and newlines
-            sa_json_clean = sa_json_str.strip()
-            sa_info = json.loads(sa_json_clean)
+            sa_info = json.loads(sa_json_str.strip())
             credentials = google.oauth2.service_account.Credentials.from_service_account_info(
                 sa_info,
                 scopes=["https://www.googleapis.com/auth/firebase.messaging"]
             )
         else:
-            return jsonify({"error": "No service account found. Ensure fcm-service-account.json is in project root"}), 500
+            return jsonify({"error": "No service account found"}), 500
 
         auth_req = google.auth.transport.requests.Request()
         credentials.refresh(auth_req)
         access_token = credentials.token
     except json.JSONDecodeError as e:
-        return jsonify({"error": f"Invalid service account JSON: {str(e)}"}), 500
+        return jsonify({"error": f"Invalid JSON: {str(e)}"}), 500
     except Exception as e:
         return jsonify({"error": f"Auth failed: {str(e)}"}), 500
 
     db = get_db()
     tokens = [t["token"] for t in db.push_tokens.find({}, {"token": 1})]
     if not tokens:
-        return jsonify({"sent": 0, "total": 0, "cleaned": 0, "msg": "No subscribers yet"})
+        return jsonify({"sent": 0, "total": 0, "cleaned": 0})
 
     fcm_url = f"https://fcm.googleapis.com/v1/projects/{project_id}/messages:send"
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
-    }
+    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
 
     sent = 0
     failed_tokens = []
-
     for token in tokens:
         payload = {
             "message": {
                 "token": token,
                 "notification": {"title": title, "body": body},
                 "webpush": {
-                    "notification": {
-                        "title": title,
-                        "body": body,
-                        "icon": "https://filmifire.com/static/favicon-32x32.png",
-                        "requireInteraction": False
-                    },
+                    "notification": {"title": title, "body": body,
+                                     "icon": "https://filmifire.com/static/favicon-32x32.png",
+                                     "requireInteraction": False},
                     "fcm_options": {"link": url}
                 },
                 "data": {"url": url}
@@ -411,8 +408,7 @@ def _do_send_notification():
                 sent += 1
             elif resp.status_code in (400, 404):
                 err = resp.json().get("error", {}).get("details", [{}])
-                error_code = err[0].get("errorCode", "") if err else ""
-                if error_code in ("UNREGISTERED", "INVALID_ARGUMENT"):
+                if err and err[0].get("errorCode", "") in ("UNREGISTERED", "INVALID_ARGUMENT"):
                     failed_tokens.append(token)
         except Exception:
             pass
@@ -426,27 +422,21 @@ def _do_send_notification():
 @login_required
 def push_subscriber_count():
     db = get_db()
-    count = db.push_tokens.count_documents({})
-    return jsonify({"count": count})
-
+    return jsonify({"count": db.push_tokens.count_documents({})})
 
 @admin_bp.route("/test-fcm-config")
 @login_required
 def test_fcm_config():
-    """Debug route — check FCM config is correct"""
     import os, json
     result = {}
     sa_path = current_app.config.get("FCM_SERVICE_ACCOUNT_PATH", "")
     sa_json = current_app.config.get("FCM_SERVICE_ACCOUNT_JSON", "")
     project_id = current_app.config.get("FCM_PROJECT_ID", "")
-    
     result["project_id"] = project_id or "NOT SET"
     result["sa_path"] = sa_path
     result["sa_path_exists"] = os.path.exists(sa_path) if sa_path else False
     result["sa_json_length"] = len(sa_json)
     result["sa_json_starts_with"] = sa_json[:30] if sa_json else "EMPTY"
-    
-    # Try parsing
     if sa_path and os.path.exists(sa_path):
         try:
             with open(sa_path) as f:
@@ -460,18 +450,14 @@ def test_fcm_config():
             result["json_parse"] = "OK — project: " + data.get("project_id", "?")
         except Exception as e:
             result["json_parse"] = f"FAILED: {e}"
-    
-    # Check subscriber count
     db = get_db()
     result["push_tokens_count"] = db.push_tokens.count_documents({})
-    
     return jsonify(result)
 
-# ── Image upload for article body (Quill editor) ──────────────────────────────
+# ── Image upload for article body ─────────────────────────────────────────────
 @admin_bp.route("/upload-image", methods=["POST"])
 @login_required
 def upload_image():
-    from flask import jsonify
     if "file" not in request.files:
         return jsonify({"error": "No file provided"}), 400
     f = request.files["file"]
@@ -484,12 +470,8 @@ def upload_image():
             api_secret=current_app.config["CLOUDINARY_API_SECRET"]
         )
         result = cloudinary.uploader.upload(
-            f,
-            folder="filmifire/body",
-            quality="auto",
-            fetch_format="auto"
+            f, folder="filmifire/body", quality="auto", fetch_format="auto"
         )
-        url = result.get("secure_url", "")
-        return jsonify({"url": url})
+        return jsonify({"url": result.get("secure_url", "")})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

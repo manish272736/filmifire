@@ -192,6 +192,7 @@ img { display: block; max-width: 100%; }
 .badge-sandalwood { background: #8e44ad; color: #fff; }
 .badge-box-office { background: #e67e22; color: #fff; }
 .badge-records { background: #e84393; color: #fff; }
+.badge-reviews { background: #16a085; color: #fff; }
 
 /* ── Featured hero ───────────────────────────────────────────────────────── */
 .hero {

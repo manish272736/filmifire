@@ -1,15 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Contact Us — FilmiFire{% endblock %}
-
 {% block content %}
 <div class="container">
   <div class="static-page">
-
     <div class="static-header">
       <h1>Contact Us</h1>
       <p>We'd love to hear from you</p>
     </div>
-
     <div class="static-body">
 
       {% with messages = get_flashed_messages(with_categories=true) %}
@@ -26,6 +23,7 @@
       <p>Whether you have a tip about a box office story, want to report an error, or are interested in advertising on FilmiFire — we want to hear from you.</p>
 
       <div class="contact-grid">
+
         <div class="contact-form-wrap">
           <form method="POST" action="{{ url_for('main.contact') }}">
             <div class="contact-field">
@@ -57,7 +55,7 @@
           <div class="contact-info-block">
             <div class="contact-info-title">Follow Us</div>
             <p style="font-size:13px;color:var(--muted);line-height:1.6">
-              Stay updated with the latest box office news by following us on social media.
+              Stay updated with the latest box office news and film reviews by following us on social media.
               Our pages are being set up — links coming soon.
             </p>
             <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
@@ -67,17 +65,24 @@
               <a href="#" class="social-btn-lg">Telegram</a>
             </div>
           </div>
-
           <div class="contact-info-block" style="margin-top:24px">
             <div class="contact-info-title">Response Time</div>
             <p style="font-size:13px;color:var(--muted);line-height:1.6">
-              We typically respond to all messages within <strong style="color:var(--text)">24–48 hours</strong>.
+              We typically respond to all messages within
+              <strong style="color:var(--text)">24–48 hours</strong>.
               For urgent corrections, please mention "URGENT" in your subject line.
             </p>
           </div>
+          <div class="contact-info-block" style="margin-top:24px">
+            <div class="contact-info-title">Privacy</div>
+            <p style="font-size:13px;color:var(--muted);line-height:1.6">
+              Your contact details are used only to respond to your message and are never shared with third parties.
+              Read our <a href="{{ url_for('main.privacy') }}" style="color:var(--accent)">Privacy Policy</a>.
+            </p>
+          </div>
         </div>
-      </div>
 
+      </div>
     </div>
   </div>
 </div>

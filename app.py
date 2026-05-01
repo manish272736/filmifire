@@ -37,6 +37,17 @@ def create_app():
     def robots():
         return send_from_directory(app.static_folder, 'robots.txt')
 
+    # ── IndexNow key file — served from root for Bing verification ───────
+    @app.route('/<key_file>')
+    def indexnow_key(key_file):
+        if key_file.endswith('.txt') and key_file != 'robots.txt':
+            try:
+                return send_from_directory(app.static_folder, key_file,
+                                           mimetype='text/plain')
+            except Exception:
+                pass
+        abort(404)
+
     from blueprints.main import main_bp
     from blueprints.admin import admin_bp
     app.register_blueprint(main_bp)

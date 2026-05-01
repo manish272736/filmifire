@@ -181,11 +181,16 @@
           <label>Your Rating (1–5)</label>
           <select name="rating">
             <option value="">— No rating —</option>
-            <option value="1" {% if article and article.get('rating') == 1 %}selected{% endif %}>1 / 5 ⭐</option>
-            <option value="2" {% if article and article.get('rating') == 2 %}selected{% endif %}>2 / 5 ⭐⭐</option>
-            <option value="3" {% if article and article.get('rating') == 3 %}selected{% endif %}>3 / 5 ⭐⭐⭐</option>
-            <option value="4" {% if article and article.get('rating') == 4 %}selected{% endif %}>4 / 5 ⭐⭐⭐⭐</option>
-            <option value="5" {% if article and article.get('rating') == 5 %}selected{% endif %}>5 / 5 ⭐⭐⭐⭐⭐</option>
+            <option value="0.5" {% if article and article.get('rating') == 0.5 %}selected{% endif %}>0.5 / 5 — ½★</option>
+            <option value="1" {% if article and article.get('rating') == 1 %}selected{% endif %}>1.0 / 5 — ★</option>
+            <option value="1.5" {% if article and article.get('rating') == 1.5 %}selected{% endif %}>1.5 / 5 — ★½</option>
+            <option value="2" {% if article and article.get('rating') == 2 %}selected{% endif %}>2.0 / 5 — ★★</option>
+            <option value="2.5" {% if article and article.get('rating') == 2.5 %}selected{% endif %}>2.5 / 5 — ★★½</option>
+            <option value="3" {% if article and article.get('rating') == 3 %}selected{% endif %}>3.0 / 5 — ★★★</option>
+            <option value="3.5" {% if article and article.get('rating') == 3.5 %}selected{% endif %}>3.5 / 5 — ★★★½</option>
+            <option value="4" {% if article and article.get('rating') == 4 %}selected{% endif %}>4.0 / 5 — ★★★★</option>
+            <option value="4.5" {% if article and article.get('rating') == 4.5 %}selected{% endif %}>4.5 / 5 — ★★★★½</option>
+            <option value="5" {% if article and article.get('rating') == 5 %}selected{% endif %}>5.0 / 5 — ★★★★★</option>
           </select>
         </div>
       </div>

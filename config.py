@@ -26,4 +26,5 @@ class Config:
         {"slug": "sandalwood", "label": "Sandalwood"},
         {"slug": "box-office", "label": "Box Office"},
         {"slug": "records",    "label": "Records"},
+        {"slug": "reviews",    "label": "Reviews"},
     ]

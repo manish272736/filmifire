@@ -77,23 +77,35 @@ def index():
     db = get_db()
     pinned = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "pinned": True,
-         "category": {"$nin": ["photos", "box-office"]}},
+         "category": {"$nin": ["photos", "box-office", "reviews"]}},
         sort=[("published_at", -1)]
     ))
     pinned_ids = [a["_id"] for a in pinned]
-    remaining_limit = max(0, 15 - len(pinned))
+    remaining_limit = max(0, 12 - len(pinned))
     rest = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "_id": {"$nin": pinned_ids},
-         "category": {"$nin": ["photos", "box-office"]}},
+         "category": {"$nin": ["photos", "box-office", "reviews"]}},
         sort=[("published_at", -1)],
         limit=remaining_limit
     ))
     latest = pinned + rest
+    week_ago = datetime.datetime.utcnow() - datetime.timedelta(days=7)
     trending = list(db.articles.find(
-        {"status": "published", "archived": {"$ne": True}},
+        {"status": "published", "archived": {"$ne": True},
+         "published_at": {"$gte": week_ago}},
         sort=[("views", -1)],
         limit=5
     ))
+    # Fallback to all-time if fewer than 5 results in last 7 days
+    if len(trending) < 5:
+        existing_ids = [a["_id"] for a in trending]
+        fallback = list(db.articles.find(
+            {"status": "published", "archived": {"$ne": True},
+             "_id": {"$nin": existing_ids}},
+            sort=[("views", -1)],
+            limit=5 - len(trending)
+        ))
+        trending += fallback
     latest_news = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "category": "news"},
         sort=[("published_at", -1)],
@@ -107,14 +119,19 @@ def index():
     photo_articles = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "category": "photos"},
         sort=[("published_at", -1)],
-        limit=4
+        limit=6
     ))
     boxoffice_articles = list(db.articles.find(
         {"status": "published", "archived": {"$ne": True}, "category": "box-office"},
         sort=[("published_at", -1)],
         limit=10
     ))
-    return render_template("index.html", latest=latest, trending=trending, latest_news=latest_news, slider_articles=slider_articles, photo_articles=photo_articles, boxoffice_articles=boxoffice_articles)
+    reviews_articles = list(db.articles.find(
+        {"status": "published", "archived": {"$ne": True}, "category": "reviews"},
+        sort=[("published_at", -1)],
+        limit=10
+    ))
+    return render_template("index.html", latest=latest, trending=trending, latest_news=latest_news, slider_articles=slider_articles, photo_articles=photo_articles, boxoffice_articles=boxoffice_articles, reviews_articles=reviews_articles)
 
 # ── Article page ──────────────────────────────────────────────────────────────
 @main_bp.route("/article/<slug>")
@@ -169,11 +186,23 @@ def article(slug):
         sort=[("published_at", -1)],
         limit=6
     ))
+    week_ago = datetime.datetime.utcnow() - datetime.timedelta(days=7)
     trending = list(db.articles.find(
-        {"status": "published", "archived": {"$ne": True}},
+        {"status": "published", "archived": {"$ne": True},
+         "published_at": {"$gte": week_ago}},
         sort=[("views", -1)],
         limit=5
     ))
+    # Fallback to all-time if fewer than 5 results in last 7 days
+    if len(trending) < 5:
+        existing_ids = [a["_id"] for a in trending]
+        fallback = list(db.articles.find(
+            {"status": "published", "archived": {"$ne": True},
+             "_id": {"$nin": existing_ids}},
+            sort=[("views", -1)],
+            limit=5 - len(trending)
+        ))
+        trending += fallback
     return render_template("article.html", article=art, related=related,
                            latest_news=latest_news, photo_articles=photo_articles,
                            trending=trending)

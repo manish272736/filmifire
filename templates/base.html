@@ -188,7 +188,7 @@
     "url": "https://filmifire.com",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://filmifire.com/static/filmifire-logo-112.svg",
+      "url": "https://filmifire.com/static/favicon-32x32.png",
       "width": 112,
       "height": 112
     },
@@ -199,6 +199,8 @@
   {% block extra_css %}{% endblock %}
 </head>
 <body>
+
+
 
 {% if ticker_headlines and ticker_headlines|length > 0 %}
 <div class="ticker-bar" id="ticker-bar">
@@ -249,6 +251,7 @@
     <div class="nav-drawer-section">More</div>
     <a href="{{ url_for('main.category', slug='box-office') }}" class="nav-drawer-link {% if request.view_args and request.view_args.get('slug') == 'box-office' %}active{% endif %}">📊 Box Office</a>
     <a href="{{ url_for('main.category', slug='records') }}" class="nav-drawer-link {% if request.view_args and request.view_args.get('slug') == 'records' %}active{% endif %}">🏆 Records</a>
+    <a href="{{ url_for('main.category', slug='reviews') }}" class="nav-drawer-link {% if request.view_args and request.view_args.get('slug') == 'reviews' %}active{% endif %}">⭐ Reviews</a>
     <a href="{{ url_for('main.all_articles') }}" class="nav-drawer-link">📄 All Articles</a>
     <a href="{{ url_for('main.about') }}" class="nav-drawer-link">ℹ️ About</a>
     <a href="{{ url_for('main.contact') }}" class="nav-drawer-link">✉️ Contact</a>
@@ -281,6 +284,7 @@
       </div>
       <a href="{{ url_for('main.category', slug='box-office') }}" class="nav-link {% if request.view_args and request.view_args.get('slug') == 'box-office' %}active{% endif %}">Box Office</a>
       <a href="{{ url_for('main.category', slug='records') }}" class="nav-link {% if request.view_args and request.view_args.get('slug') == 'records' %}active{% endif %}">Records</a>
+      <a href="{{ url_for('main.category', slug='reviews') }}" class="nav-link {% if request.view_args and request.view_args.get('slug') == 'reviews' %}active{% endif %}">Reviews</a>
     </div>
     <div class="search-wrap">
       <form action="{{ url_for('main.search') }}" method="GET" class="nav-search" id="search-form" autocomplete="off">
@@ -501,6 +505,8 @@ function toggleTheme() {
 })();
 </script>
 
+
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
@@ -573,6 +579,7 @@ function toggleTheme() {
         } else if (Notification.permission === 'denied') {
           console.log('[FF Push]', 'Notifications blocked in browser settings');
         } else {
+          // Direct prompt — single step like Times Now, no custom banner
           const snoozed = localStorage.getItem('ff_notif_snoozed');
           if (!snoozed || Date.now() > parseInt(snoozed)) {
             setTimeout(async () => {
@@ -583,6 +590,7 @@ function toggleTheme() {
                 if (permission === 'granted' && window._swReg) {
                   await getAndSaveToken(window._swReg);
                 } else if (permission === 'denied' || permission === 'default') {
+                  // Snooze 3 days — don't ask again too soon
                   localStorage.setItem('ff_notif_snoozed', String(Date.now() + 3 * 24 * 60 * 60 * 1000));
                 }
               } catch(e) {
@@ -596,6 +604,8 @@ function toggleTheme() {
       }
     }
 
+    // No custom banner listener needed — using direct browser prompt
+
     onMessage(messaging, payload => {
       const notif = payload.notification || {};
       const url = payload.data?.url || '/';
@@ -608,6 +618,8 @@ function toggleTheme() {
 
     initSW();
   }
+
+  // No custom banner to dismiss — browser handles it natively
 </script>
 </body>
 </html>

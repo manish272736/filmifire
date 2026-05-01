@@ -1,49 +1,78 @@
 {% extends "base.html" %}
 {% block title %}Privacy Policy — FilmiFire{% endblock %}
-
 {% block content %}
 <div class="container">
   <div class="static-page">
-
     <div class="static-header">
       <h1>Privacy Policy</h1>
-      <p>Last updated: January 2025</p>
+      <p>Last updated: April 2026</p>
     </div>
-
     <div class="static-body">
 
-      <p>At FilmiFire, accessible from filmifire.com, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by FilmiFire and how we use it.</p>
+      <p>At FilmiFire, accessible from <a href="https://filmifire.com" style="color:var(--accent)">filmifire.com</a>, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by FilmiFire and how we use it.</p>
 
       <h2>Information We Collect</h2>
       <p>FilmiFire is a read-only news site. We do not require users to create accounts or provide personal information to access our content. The only information we may collect is:</p>
       <ul>
-        <li><strong>Usage data</strong> — Pages visited, time spent, browser type (collected anonymously via analytics)</li>
+        <li><strong>Usage data</strong> — Pages visited, time spent, browser type (collected anonymously via Google Analytics)</li>
         <li><strong>Contact form data</strong> — Name, email, and message when you voluntarily contact us</li>
+        <li><strong>Push notification tokens</strong> — If you grant permission for browser push notifications, we store an anonymous device token (FCM token) to send you news alerts. No personal information is attached to this token. You can revoke permission at any time in your browser settings.</li>
         <li><strong>Cookies</strong> — Small files placed on your device by Google Analytics and advertising partners</li>
+        <li><strong>Emoji reaction data</strong> — Stored locally in your browser (localStorage) only. We do not send this data to our servers.</li>
       </ul>
 
-      <h2>Google Adsense & Advertising</h2>
-      <p>FilmiFire may use Google AdSense to display advertisements. Google AdSense uses cookies to serve ads based on your prior visits to this website and other sites. Google's use of advertising cookies enables it to serve ads based on your visit to our site and/or other sites on the Internet. You may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" style="color:var(--accent)">Google Ads Settings</a>.</p>
+      <h2>How We Use Your Information</h2>
+      <ul>
+        <li>To analyse website traffic and improve our content (Google Analytics)</li>
+        <li>To respond to messages submitted via our contact form</li>
+        <li>To send breaking news push notifications if you have opted in</li>
+        <li>To display relevant advertisements (Google AdSense)</li>
+      </ul>
+
+      <h2>Google AdSense &amp; Advertising</h2>
+      <p>FilmiFire uses Google AdSense to display advertisements. Google AdSense uses cookies to serve ads based on your prior visits to this website and other sites. Google's use of advertising cookies enables it to serve ads based on your visit to our site and/or other sites on the Internet. You may opt out of personalised advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener" style="color:var(--accent)">Google Ads Settings</a>.</p>
 
       <h2>Third-Party Services</h2>
-      <p>FilmiFire may use the following third-party services:</p>
+      <p>FilmiFire uses the following third-party services:</p>
       <ul>
         <li><strong>Google Analytics</strong> — Website traffic analysis</li>
         <li><strong>Google AdSense</strong> — Display advertising</li>
+        <li><strong>Firebase Cloud Messaging (FCM)</strong> — Push notification delivery</li>
         <li><strong>Cloudinary</strong> — Image hosting and delivery</li>
+        <li><strong>Render</strong> — Web hosting infrastructure</li>
+        <li><strong>MongoDB Atlas</strong> — Database hosting</li>
       </ul>
+      <p>Each of these services has its own Privacy Policy governing how they handle data.</p>
 
       <h2>Cookies</h2>
-      <p>FilmiFire uses cookies to improve your experience. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you do not accept cookies, some parts of our website may not function properly.</p>
+      <p>FilmiFire uses cookies to improve your experience. These include:</p>
+      <ul>
+        <li><strong>Analytics cookies</strong> — Set by Google Analytics to track anonymous usage statistics</li>
+        <li><strong>Advertising cookies</strong> — Set by Google AdSense to serve relevant advertisements</li>
+        <li><strong>Preference cookies</strong> — Set by FilmiFire to remember your dark/light mode preference</li>
+      </ul>
+      <p>You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you do not accept cookies, some parts of our website may not function properly.</p>
+
+      <h2>Push Notifications</h2>
+      <p>FilmiFire offers optional browser push notifications for breaking news. If you grant permission, your browser generates an anonymous device token which we store to deliver notifications. We do not use this token to identify you personally. You can withdraw permission at any time by going to your browser settings and blocking notifications from filmifire.com.</p>
 
       <h2>Links to Other Websites</h2>
       <p>Our website may contain links to other websites. We have no control over the content and practices of those sites and cannot accept responsibility for their respective privacy policies.</p>
 
       <h2>Children's Privacy</h2>
-      <p>FilmiFire does not knowingly collect any personal identifiable information from children under the age of 13.</p>
+      <p>FilmiFire does not knowingly collect any personally identifiable information from children under the age of 13. If you believe your child has provided us with personal information, please contact us immediately.</p>
+
+      <h2>Your Rights</h2>
+      <p>You have the right to:</p>
+      <ul>
+        <li>Request deletion of any personal data we hold about you (contact form submissions)</li>
+        <li>Opt out of push notifications at any time via your browser settings</li>
+        <li>Opt out of personalised advertising via Google Ads Settings</li>
+        <li>Disable cookies via your browser settings</li>
+      </ul>
 
       <h2>Changes to This Policy</h2>
-      <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page with an updated date.</p>
+      <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page with an updated date. We encourage you to review this page periodically.</p>
 
       <h2>Contact Us</h2>
       <p>If you have any questions about this Privacy Policy, please <a href="{{ url_for('main.contact') }}" style="color:var(--accent)">contact us</a>.</p>
