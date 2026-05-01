@@ -9,7 +9,7 @@ import datetime
 import cloudinary
 import cloudinary.uploader
 from flask import current_app
-from .indexnow import ping_indexnow, ping_indexnow_bulk
+from indexnow import ping_indexnow, ping_indexnow_bulk
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -54,7 +54,21 @@ def parse_rating(val):
     except (TypeError, ValueError):
         return None
 
-# ── IndexNow — ping Bing/Yahoo when articles are published ───────────────────
+# ── Login / Logout ────────────────────────────────────────────────────────────
+@admin_bp.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("admin.dashboard"))
+    if request.method == "POST":
+        db = get_db()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "").encode()
+        user_doc = db.admins.find_one({"email": email})
+        if user_doc and bcrypt.checkpw(password, user_doc["pw_hash"]):
+            login_user(AdminUser(user_doc))
+            return redirect(url_for("admin.dashboard"))
+        flash("Invalid email or password.", "error")
+    return render_template("admin/login.html")
 
 @admin_bp.route("/logout")
 @login_required
