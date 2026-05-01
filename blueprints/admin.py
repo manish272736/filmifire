@@ -9,7 +9,7 @@ import datetime
 import cloudinary
 import cloudinary.uploader
 from flask import current_app
-from indexnow import ping_indexnow, ping_indexnow_bulk
+from .indexnow import ping_indexnow, ping_indexnow_bulk
 
 admin_bp = Blueprint("admin", __name__)
 
