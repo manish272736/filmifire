@@ -1122,14 +1122,15 @@ html, body {
   width: max-content;
   min-width: 100%;
 }
-/* ── Mobile fixes ────────────────────────────────────────────────────────── */
+/* ── Mobile fixes — Force Wrap for Tables ────────────────────────────────── */
 @media (max-width: 768px) {
-  html {
-    overflow-x: auto;  /* keep for wide-table articles */
+  /* Prevent the entire page from having horizontal scroll */
+  html, body {
+    overflow-x: hidden;
+    width: 100vw;
+    position: relative;
   }
-  body {
-    overflow-x: hidden;  /* prevent page-level horizontal scroll on normal pages */
-  }
+
   .ticker-bar {
     position: fixed !important;
     top: 0 !important;
@@ -1183,6 +1184,7 @@ html, body {
     border-radius: 0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    display: block;
     padding-right: 0;
     padding-left: 0;
     box-sizing: border-box;
@@ -1195,22 +1197,27 @@ html, body {
     border-radius: 2px;
   }
   .table-scroll-wrap table {
-    margin: 0 !important;
+    table-layout: fixed; /* Force browsers to follow defined widths */
+    width: 100% !important;
+    min-width: 100% !important;
+    margin-left: 0 !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal !important; /* Force text to wrap to new lines */
     border: none;
-    width: max-content;
-    min-width: calc(100% - 48px);
-    margin-left: 24px !important;
-    box-sizing: content-box;
+    box-sizing: border-box;
   }
   .table-scroll-wrap table th,
   .table-scroll-wrap table td {
+    padding: 8px 10px;
     border: 1px solid var(--border);
+    word-break: break-word; /* Ensure long titles wrap */
+    white-space: normal !important;
   }
-  /* RIGHT BREATHING ROOM FIX — add 24px padding to last column cells */
-  .table-scroll-wrap table th:last-child,
-  .table-scroll-wrap table td:last-child {
-    border-right: 1px solid var(--border);
-    padding-right: 28px;
+  /* Narrower Rank column to save space */
+  .table-scroll-wrap table th:first-child,
+  .table-scroll-wrap table td:first-child {
+    width: 50px;
   }
 }
 
@@ -1449,7 +1456,7 @@ body.has-wide-table {
 .reaction-count { font-size: 13px; font-weight: 500; color: var(--muted); min-width: 16px; }
 .reaction-btn.reacted .reaction-count { color: var(--accent); }
 
-/* ── Light mode ──────────────────────────────────────────────────────────── */
+/* ── Dark mode ───────────────────────────────────────────────────────────── */
 html.dark-mode,
 html.dark-mode body {
   --bg: #0d0d0f;
