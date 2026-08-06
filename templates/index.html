@@ -128,7 +128,10 @@
 }
 .bo-strip-outer {
   position: relative;
+  width: 100%;
+  overflow: hidden; /* Keeps extra cards out of view until scrolled */
 }
+
 .bo-strip-scroll {
   display: flex;
   gap: 14px;
@@ -139,6 +142,7 @@
   padding-bottom: 4px;
 }
 .bo-strip-scroll::-webkit-scrollbar { display: none; }
+
 .bo-strip-arrow-btn {
   width: 28px;
   height: 28px;
@@ -160,7 +164,9 @@
 /* ── Box Office / Reviews Card ────────────────────────────────────────── */
 .bo-card {
   flex-shrink: 0;
-  width: 200px;
+  /* Exactly 4 cards visible on desktop */
+  width: calc((100% - 42px) / 4);
+  min-width: calc((100% - 42px) / 4);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -232,7 +238,7 @@
   .bo-strip-wrap { overflow: hidden; max-width: 100%; }
   .bo-strip-outer { margin-left: 0; margin-right: 0; }
   .bo-strip-scroll { padding-left: 4px; padding-right: 4px; overflow-x: auto; overflow-y: visible; max-width: 100%; }
-  .bo-card { width: 150px; flex-shrink: 0; }
+  .bo-card { width: 150px; min-width: 150px; flex-shrink: 0; }
   .bo-card-thumb { height: 85px; }
   .bo-card-title { font-size: 12px; }
 }
@@ -246,7 +252,7 @@
     <!-- Left: Carousel + Strips + Latest articles -->
     <div>
 
-      <!-- Carousel -->
+      <!-- 1. Carousel -->
       {% if slider_articles and slider_articles|length > 0 %}
       <div class="carousel-wrap" id="carousel">
         <div class="carousel-track" id="carousel-track">
@@ -278,29 +284,29 @@
       </div>
       {% endif %}
 
-      <!-- Box Office Strip -->
-      {% if boxoffice_articles and boxoffice_articles|length > 0 %}
+      <!-- 2. Reviews Strip (NOW TOP) -->
+      {% if reviews_articles and reviews_articles|length > 0 %}
       <div class="bo-strip-wrap">
         <div class="section-head">
-          <h2>Box Office</h2>
+          <h2>Reviews</h2>
           <div class="line"></div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-            <a href="{{ url_for('main.category', slug='box-office') }}"
+            <a href="{{ url_for('main.category', slug='reviews') }}"
                style="font-size:12px;color:var(--muted);text-transform:uppercase;
                       letter-spacing:0.08em;text-decoration:none;white-space:nowrap;">See all</a>
-            <button class="bo-strip-arrow-btn" onclick="boScroll(-1)" aria-label="Scroll left">&#8249;</button>
-            <button class="bo-strip-arrow-btn" onclick="boScroll(1)" aria-label="Scroll right">&#8250;</button>
+            <button class="bo-strip-arrow-btn" onclick="revScroll(-1)" aria-label="Scroll left">&#8249;</button>
+            <button class="bo-strip-arrow-btn" onclick="revScroll(1)" aria-label="Scroll right">&#8250;</button>
           </div>
         </div>
         <div class="bo-strip-outer">
-          <div class="bo-strip-scroll" id="bo-strip-scroll">
-            {% for art in boxoffice_articles %}
+          <div class="bo-strip-scroll" id="rev-strip-scroll">
+            {% for art in reviews_articles %}
             <a href="{{ url_for('main.article', slug=art.slug) }}" class="bo-card">
               <div class="bo-card-thumb">
                 {% if art.cover_img %}
                   <img src="{{ art.cover_img }}" alt="{{ art.title }}" loading="lazy">
                 {% else %}
-                  <div class="bo-card-thumb-placeholder">📊</div>
+                  <div class="bo-card-thumb-placeholder">⭐</div>
                 {% endif %}
               </div>
               <div class="bo-card-body">
@@ -314,7 +320,7 @@
       </div>
       {% endif %}
 
-      <!-- Latest articles -->
+      <!-- 3. Latest articles -->
       <div class="section-head">
         <h2>Latest</h2>
         <div class="line"></div>
@@ -361,29 +367,29 @@
         </a>
       </div>
 
-      <!-- Reviews Strip -->
-      {% if reviews_articles and reviews_articles|length > 0 %}
+      <!-- 4. Box Office Strip (NOW BOTTOM) -->
+      {% if boxoffice_articles and boxoffice_articles|length > 0 %}
       <div class="bo-strip-wrap">
         <div class="section-head">
-          <h2>Reviews</h2>
+          <h2>Box Office</h2>
           <div class="line"></div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-            <a href="{{ url_for('main.category', slug='reviews') }}"
+            <a href="{{ url_for('main.category', slug='box-office') }}"
                style="font-size:12px;color:var(--muted);text-transform:uppercase;
                       letter-spacing:0.08em;text-decoration:none;white-space:nowrap;">See all</a>
-            <button class="bo-strip-arrow-btn" onclick="revScroll(-1)" aria-label="Scroll left">&#8249;</button>
-            <button class="bo-strip-arrow-btn" onclick="revScroll(1)" aria-label="Scroll right">&#8250;</button>
+            <button class="bo-strip-arrow-btn" onclick="boScroll(-1)" aria-label="Scroll left">&#8249;</button>
+            <button class="bo-strip-arrow-btn" onclick="boScroll(1)" aria-label="Scroll right">&#8250;</button>
           </div>
         </div>
         <div class="bo-strip-outer">
-          <div class="bo-strip-scroll" id="rev-strip-scroll">
-            {% for art in reviews_articles %}
+          <div class="bo-strip-scroll" id="bo-strip-scroll">
+            {% for art in boxoffice_articles %}
             <a href="{{ url_for('main.article', slug=art.slug) }}" class="bo-card">
               <div class="bo-card-thumb">
                 {% if art.cover_img %}
                   <img src="{{ art.cover_img }}" alt="{{ art.title }}" loading="lazy">
                 {% else %}
-                  <div class="bo-card-thumb-placeholder">⭐</div>
+                  <div class="bo-card-thumb-placeholder">📊</div>
                 {% endif %}
               </div>
               <div class="bo-card-body">
@@ -597,11 +603,11 @@
 
 window.boScroll = function (dir) {
   var el = document.getElementById('bo-strip-scroll');
-  if (el) el.scrollBy({ left: dir * 220, behavior: 'smooth' });
+  if (el) el.scrollBy({ left: dir * (el.clientWidth + 14), behavior: 'smooth' });
 };
 window.revScroll = function (dir) {
   var el = document.getElementById('rev-strip-scroll');
-  if (el) el.scrollBy({ left: dir * 220, behavior: 'smooth' });
+  if (el) el.scrollBy({ left: dir * (el.clientWidth + 14), behavior: 'smooth' });
 };
 </script>
 {% endblock %}
