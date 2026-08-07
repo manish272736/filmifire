@@ -40,28 +40,31 @@ Built with a modern web architecture, it focuses on delivering a sleek, mobile-o
 
 ## 🏗️ System Architecture & Codebase Structure
 
+```text
 filmifire/
-├── app.py              # Application Factory & Configuration
-├── config.py           # Site Settings & Global Categories
-├── db.py               # MongoDB Connection Pool & Indexing
+├── app.py              # Application Factory & Routing Setup
+├── config.py           # Site Configurations & Category Definitions
+├── db.py               # MongoDB Connection Pool & Indexing Engine
 ├── blueprints/
 │   ├── main.py         # Public Editorial & Search Routes
-│   └── admin.py        # Secure Content Publishing Blueprints
+│   └── admin.py        # Content Publishing & Management Workflows
 ├── templates/          # Jinja2 Dynamic Rendering Engine
-│   ├── base.html       # Base Shell (SEO Meta, Dynamic Header/Footer)
+│   ├── base.html       # Base Shell (SEO Meta, Dynamic Header & Footer)
 │   ├── index.html      # Homepage (Hero Carousel, Category Strips)
-│   ├── article.html    # Content Page Layout
+│   ├── article.html    # Content Page Layout & Related Articles
 │   ├── category.html   # Category Aggregation Feed
-│   └── search.html     # Search Results Interface
-└── static/             # Static Assets Engine
-├── css/style.css   # Main Stylesheet & Responsive Breakpoints
-└── js/main.js      # Animations & Interactive Carousel Engine
-
+│   ├── search.html     # Real-Time Search Interface
+│   └── admin/          # Editorial Dashboard & Rich Text Editor
+└── static/             # Asset Engine
+    ├── css/
+    │   └── style.css   # Main Stylesheet & Responsive Breakpoints
+    └── js/
+        └── main.js     # UI Animations & Interactive Carousel Engine
 ---
 
 ## 🔒 Security & Optimization Highlights
 
-* **Environment Separation:** Sensitive credentials, database connection strings, and service keys are managed via isolated runtime environment variables (`.env`).
+* **Environment Separation:** Sensitive credentials, API tokens, and database connection strings are managed via isolated environment variables (`.env`).
 * **Resource Optimization:** Lazy-loaded images and asynchronous scripts minimize initial payload sizes across mobile networks.
-| `articles` | All articles — slug, body_html, category, tags, views, status |
+* **Database Efficiency:** Custom index strategies on slug fields and search terms ensure fast database response times even under high traffic.
 | `admins` | Admin accounts — email + bcrypt hash |
