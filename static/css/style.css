@@ -1092,6 +1092,37 @@ img { display: block; max-width: 100%; }
   .article-layout { padding: 24px 0 60px; }
   /* Hide articles 7+ on homepage mobile — show max 6 */
   .home-cards-grid .card:nth-child(n+7) { display: none; }
+
+  /* ── Mobile Scroll Buttons & 2.5 Cards Fix ── */
+  
+  /* Ensure navigation buttons stay visible on mobile screens */
+  .section-head .scroll-btn,
+  .section-head .slider-btn,
+  .reviews-nav-btn {
+    display: flex !important;
+  }
+
+  /* Configure horizontal scroll containers */
+  .reviews-scroll-container,
+  .boxoffice-scroll-container,
+  .cards-scroll-container {
+    display: flex !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    gap: 12px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Set card width to 40% so ~2.5 cards are visible at a time */
+  .reviews-scroll-container .card,
+  .boxoffice-scroll-container .card,
+  .cards-scroll-container .card,
+  .cards-scroll-container .card-item {
+    flex: 0 0 40% !important;
+    min-width: 40% !important;
+    max-width: 40% !important;
+    scroll-snap-align: start;
+  }
 }
 
 /* ── Desktop: no horizontal scroll ever ─────────────────────────────────── */

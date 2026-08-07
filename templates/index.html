@@ -129,7 +129,7 @@
 .bo-strip-outer {
   position: relative;
   width: 100%;
-  overflow: hidden; /* Keeps extra cards out of view until scrolled */
+  overflow: hidden;
 }
 
 .bo-strip-scroll {
@@ -159,7 +159,6 @@
   transition: border-color 0.15s, color 0.15s;
 }
 .bo-strip-arrow-btn:hover { border-color: var(--accent); color: var(--accent); }
-@media(max-width:600px){ .bo-strip-arrow-btn { display: none; } }
 
 /* ── Box Office / Reviews Card ────────────────────────────────────────── */
 .bo-card {
@@ -229,7 +228,7 @@
   margin-top: auto;
 }
 
-/* ── Mobile layout + overflow fix ────────────────────────────────────── */
+/* ── Mobile layout + 2.5 Cards + Buttons fix ─────────────────────────── */
 @media(max-width:768px){
   .home-layout { overflow-x: hidden; max-width: 100vw; width: 100%; }
   .home-layout > div:first-child { overflow-x: hidden; max-width: 100%; min-width: 0; }
@@ -237,10 +236,30 @@
   .container { overflow-x: hidden; max-width: 100vw; }
   .bo-strip-wrap { overflow: hidden; max-width: 100%; }
   .bo-strip-outer { margin-left: 0; margin-right: 0; }
-  .bo-strip-scroll { padding-left: 4px; padding-right: 4px; overflow-x: auto; overflow-y: visible; max-width: 100%; }
-  .bo-card { width: 150px; min-width: 150px; flex-shrink: 0; }
-  .bo-card-thumb { height: 85px; }
+  .bo-strip-scroll { 
+    padding-left: 4px; 
+    padding-right: 4px; 
+    overflow-x: auto; 
+    overflow-y: visible; 
+    max-width: 100%;
+    gap: 10px;
+    scroll-snap-type: x mandatory;
+  }
+  
+  /* Forces 2.5 cards visible per screen width */
+  .bo-card { 
+    width: 38% !important; 
+    min-width: 38% !important; 
+    flex-shrink: 0 !important; 
+    scroll-snap-align: start;
+  }
+  .bo-card-thumb { height: 95px; }
   .bo-card-title { font-size: 12px; }
+
+  /* Keep scroll buttons visible on mobile */
+  .bo-strip-arrow-btn {
+    display: flex !important;
+  }
 }
 </style>
 {% endblock %}
