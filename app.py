@@ -10,9 +10,17 @@ def create_app():
     app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50MB
     login_manager.init_app(app)
 
-    # ── Redirect onrender.com → filmifire.com ─────────────────────────────
+    # ── Lightweight Health Check Endpoint ─────────────────────────────────
+    @app.route('/healthz')
+    def health_check():
+        return "OK", 200
+
+    # ── Redirect onrender.com → filmifire.com (Excludes /healthz) ───────────
     @app.before_request
     def redirect_to_custom_domain():
+        # Do not redirect health checks so Render's internal checks always pass directly
+        if request.path == '/healthz':
+            return None
         if request and 'onrender.com' in request.host:
             url = 'https://filmifire.com' + request.full_path.rstrip('?')
             return redirect(url, 301)
