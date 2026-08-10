@@ -45,6 +45,11 @@ def create_app():
     def robots():
         return send_from_directory(app.static_folder, 'robots.txt')
 
+    # ── ads.txt ───────────────────────────────────────────────────────────
+    @app.route('/ads.txt')
+    def ads_txt():
+        return send_from_directory(app.static_folder, 'ads.txt')
+
     # ── IndexNow key file — served from root for Bing verification ───────
     @app.route('/<key_file>')
     def indexnow_key(key_file):
