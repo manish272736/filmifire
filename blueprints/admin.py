@@ -86,13 +86,14 @@ def dashboard():
         sort=[("published_at", -1)],
         limit=50
     ))
+    trackers = list(db.tracked_movies.find().sort("created_at", -1))
     stats = {
         "total": db.articles.count_documents({}),
         "published": db.articles.count_documents({"status": "published"}),
         "drafts": db.articles.count_documents({"status": "draft"}),
         "views": sum(a.get("views", 0) for a in db.articles.find({}, {"views": 1}))
     }
-    return render_template("admin/dashboard.html", articles=articles, stats=stats)
+    return render_template("admin/dashboard.html", articles=articles, stats=stats, trackers=trackers)
 
 # ── New article ───────────────────────────────────────────────────────────────
 @admin_bp.route("/new", methods=["GET", "POST"])
@@ -279,6 +280,112 @@ def archive_article(article_id):
     flash("Article archived." if new_status else "Article restored to active.", "info")
     return redirect(url_for("admin.dashboard"))
 
+# ── Live Box Office Trackers Admin Routes ────────────────────────────────────
+@admin_bp.route("/tracker/new")
+@login_required
+def new_tracker():
+    return render_template("admin/tracker_admin.html", tracker=None)
+
+@admin_bp.route("/tracker/edit/<tracker_id>")
+@login_required
+def edit_tracker(tracker_id):
+    db = get_db()
+    tracker = db.tracked_movies.find_one({"_id": ObjectId(tracker_id)})
+    if not tracker:
+        flash("Tracker not found.", "error")
+        return redirect(url_for("admin.dashboard"))
+    return render_template("admin/tracker_admin.html", tracker=tracker)
+
+@admin_bp.route("/tracker/save/<tracker_id>", methods=["POST"])
+@login_required
+def save_tracker(tracker_id):
+    db = get_db()
+    title = request.form.get("title", "").strip()
+    poster_url = request.form.get("poster_url", "").strip()
+    language = request.form.get("language", "Hindi").strip()
+    release_date = request.form.get("release_date", "").strip()
+    budget = float(request.form.get("budget") or 0.0)
+    verdict = request.form.get("verdict", "Running").strip()
+    is_active_bool = bool(int(request.form.get("is_active", 1)))
+    status_str = "active" if is_active_bool else "inactive"
+    auto_sync = True if request.form.get("auto_sync") == "true" else False
+    live_note = request.form.get("live_note", "").strip()
+
+    live_occupancy = {
+        "morning": request.form.get("occ_morning", "").strip(),
+        "afternoon": request.form.get("occ_afternoon", "").strip(),
+        "evening": request.form.get("occ_evening", "").strip(),
+        "night": request.form.get("occ_night", "").strip()
+    }
+
+    day_labels = request.form.getlist("day_label[]")
+    day_india_nets = request.form.getlist("day_india_net[]")
+    day_ww_grosses = request.form.getlist("day_ww_gross[]")
+
+    days_data = []
+    total_india_net = 0.0
+    total_ww_gross = 0.0
+
+    for lbl, i_net, ww_g in zip(day_labels, day_india_nets, day_ww_grosses):
+        if lbl.strip():
+            net_val = float(i_net or 0.0)
+            gross_val = float(ww_g or 0.0)
+            total_india_net += net_val
+            total_ww_gross += gross_val
+            days_data.append({
+                "label": lbl.strip(),
+                "india_net": net_val,
+                "worldwide_gross": gross_val
+            })
+
+    slug = slugify(f"{title}-box-office-collection")
+
+    doc = {
+        "title": title,
+        "slug": slug,
+        "poster_url": poster_url,
+        "language": language,
+        "release_date": release_date,
+        "budget": budget,
+        "verdict": verdict,
+        "status": status_str,
+        "is_active": is_active_bool,
+        "auto_sync": auto_sync,
+        "live_note": live_note,
+        "live_occupancy": live_occupancy,
+        "daily_breakdown": days_data,
+        "today_live": {
+            "day_number": len(days_data) if days_data else 1,
+            "net": days_data[-1]["india_net"] if days_data else 0.0,
+            "gross": days_data[-1]["worldwide_gross"] if days_data else 0.0
+        },
+        "totals": {
+            "india_net": round(total_india_net, 2),
+            "india_gross": round(total_ww_gross * 0.8, 2), # estimated or balanced representation
+            "overseas_gross": 0.0,
+            "worldwide_gross": round(total_ww_gross, 2)
+        },
+        "last_updated": datetime.datetime.utcnow()
+    }
+
+    if tracker_id == "new":
+        doc["created_at"] = datetime.datetime.utcnow()
+        db.tracked_movies.insert_one(doc)
+        flash(f"Box office tracker for '{title}' created successfully!", "success")
+    else:
+        db.tracked_movies.update_one({"_id": ObjectId(tracker_id)}, {"$set": doc})
+        flash(f"Box office tracker for '{title}' updated successfully!", "success")
+
+    return redirect(url_for("admin.dashboard"))
+
+@admin_bp.route("/tracker/delete/<tracker_id>", methods=["POST"])
+@login_required
+def delete_tracker(tracker_id):
+    db = get_db()
+    db.tracked_movies.delete_one({"_id": ObjectId(tracker_id)})
+    flash("Tracker deleted successfully.", "success")
+    return redirect(url_for("admin.dashboard"))
+
 # ── Bulk IndexNow ping — visit once to submit all existing articles ───────────
 @admin_bp.route("/setup", methods=["GET", "POST"])
 def setup():
@@ -300,7 +407,6 @@ def setup():
              style="display:block;width:100%;padding:8px;margin:8px 0">
       <button type="submit" style="padding:8px 20px">Create</button>
     </form>"""
-
 
 # ── IndexNow bulk ping (run once after setup) ─────────────────────────────────
 @admin_bp.route("/ping-indexnow-all")

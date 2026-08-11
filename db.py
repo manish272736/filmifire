@@ -33,3 +33,25 @@ def init_db(app):
         db.articles.create_index("category")
         db.articles.create_index("status")
         db.articles.create_index("published_at")
+
+        # ── Live Box Office Tracker Helpers ──────────────────────────────────────────
+
+def get_active_trackers():
+    """Returns all movies currently active in tracking."""
+    db = get_db()
+    return list(db.tracked_movies.find({"status": "active"}).sort("last_updated", -1))
+
+def get_tracker_by_slug(slug):
+    """Returns a specific movie tracker document by its slug."""
+    db = get_db()
+    return db.tracked_movies.find_one({"slug": slug})
+
+def create_or_update_tracked_movie(movie_data):
+    """Upserts a tracked movie document into MongoDB."""
+    db = get_db()
+    slug = movie_data.get("slug")
+    db.tracked_movies.update_one(
+        {"slug": slug},
+        {"$set": movie_data},
+        upsert=True
+    )

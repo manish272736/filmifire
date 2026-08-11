@@ -70,11 +70,8 @@ def create_app():
     # ── Register Blueprints ───────────────────────────────────────────────
     from blueprints.main import main_bp
     from blueprints.admin import admin_bp
-    from blueprints.tracker import tracker_bp  # <-- Imported your new tracker blueprint
-
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp, url_prefix="/admin")
-    app.register_blueprint(tracker_bp, url_prefix="/box-office")  # <-- Registered with the proper prefix
 
     # ── Context Processor ─────────────────────────────────────────────────
     @app.context_processor
@@ -97,6 +94,7 @@ def create_app():
     init_db(app)
 
     # ── Initialize 4x Daily Box Office Background Scheduler ───────────
+    # Prevents running two scheduler instances when Flask reloader is active
     if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         scheduler = BackgroundScheduler(timezone="Asia/Kolkata")
         

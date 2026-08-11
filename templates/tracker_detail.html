@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}{{ movie.title }} Live Box Office Collection, Advance Booking & Day Wise Report — FilmiFire{% endblock %}
+
+{% block meta_description %}Get real-time live box office updates, advance booking status, and day-wise worldwide collection for {{ movie.title }}.{% endblock %}
+
+{% block head_extra %}
+<!-- JSON-LD Structured Data for Google Rich Results -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "{{ movie.title }} Live Box Office Collection & Advance Booking",
+  "datePublished": "{{ movie.created_at }}",
+  "dateModified": "{{ movie.last_updated }}",
+  "author": {
+    "@type": "Organization",
+    "name": "FilmiFire"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "FilmiFire",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://filmifire.com/static/filmifire-logo-112.svg"
+    }
+  },
+  "description": "Live daily box office numbers and advance booking trends for {{ movie.title }}."
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.tracker-header {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.tracker-poster {
+  width: 100%;
+  aspect-ratio: 2/3;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+.tracker-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Live Header Badge */
+.live-badge {
+  background: #ffcc00;
+  color: #111;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+}
+.live-badge-dot {
+  width: 7px;
+  height: 7px;
+  background: #e74c3c;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse-dot 1.5s infinite;
+}
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
+  100% { transform: scale(0.95); opacity: 1; }
+}
+
+.verdict-pill {
+  background: rgba(230,126,34,0.12);
+  color: var(--accent);
+  border: 1px solid rgba(230,126,34,0.25);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+/* ── Live Status Card ─────────────────────────────────────────────────── */
+.live-status-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.occ-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.occ-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 8px;
+  text-align: center;
+}
+.occ-box-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 4px;
+  font-family: var(--font-mono);
+}
+.occ-box-val {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* ── Metrics Grid ─────────────────────────────────────────────────────── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 32px;
+}
+.metric-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 18px 14px;
+  border-radius: var(--radius);
+  text-align: center;
+}
+.metric-box-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+.metric-box-val {
+  margin: 6px 0 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* ── Table Styling ────────────────────────────────────────────────────── */
+.breakdown-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin-top: 12px;
+}
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+  min-width: 550px;
+}
+.breakdown-table th {
+  background: var(--surface2);
+  padding: 12px 14px;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.breakdown-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.breakdown-table tr:last-child td {
+  border-bottom: none;
+}
+.breakdown-table tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+@media(max-width: 768px) {
+  .tracker-header {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
+    text-align: center;
+  }
+  .tracker-poster {
+    max-width: 170px;
+    margin: 0 auto;
+  }
+  .metrics-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px; max-width: 920px;">
+
+  <!-- Breadcrumbs -->
+  <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">
+    <a href="/" style="color: var(--muted); text-decoration: none;">Home</a> &rsaquo; 
+    <a href="/box-office/" style="color: var(--muted); text-decoration: none;">Box Office</a> &rsaquo; 
+    <span style="color: var(--text);">{{ movie.title }}</span>
+  </div>
+
+  <!-- Main Hero / Overview Section -->
+  <div class="tracker-header">
+    <div class="tracker-poster">
+      {% if movie.poster_url or movie.image_url or movie.cover_img %}
+        <img src="{{ movie.poster_url or movie.image_url or movie.cover_img }}" alt="{{ movie.title }}">
+      {% else %}
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:40px;color:var(--muted)">🎬</div>
+      {% endif %}
+    </div>
+
+    <div style="display:flex; flex-direction:column; justify-content:center;">
+      <div>
+        <span class="live-badge">
+          <span class="live-badge-dot"></span> LIVE TRACKER • {{ movie.today_live.last_slot_updated if movie.today_live and movie.today_live.last_slot_updated else 'ACTIVE' }}
+        </span>
+      </div>
+
+      <h1 style="margin: 12px 0 8px; font-size: clamp(22px, 2.5vw, 30px); font-weight: 800; line-height: 1.2; color: var(--text);">
+        {{ movie.title }} Box Office Collection
+      </h1>
+
+      <p style="color: var(--muted); font-size: 13px; margin: 0 0 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+        <span>Language: <strong style="color:var(--text);">{{ movie.language or 'Hindi' }}</strong></span> &bull; 
+        <span>Budget: <strong style="color:var(--text);">{{ movie.budget or '—' }}</strong></span> &bull; 
+        <span>Verdict: <span class="verdict-pill">{{ movie.verdict or 'Running' }}</span></span>
+      </p>
+
+      <div style="font-size: 11px; color: var(--muted); font-family: var(--font-mono);">
+        Last updated: {{ movie.last_updated or movie.updated_at | reltime if (movie.last_updated or movie.updated_at) else 'Just now' }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Trends Occupancy Card -->
+  {% if movie.today_live %}
+  <div class="live-status-card">
+    <h3 style="color: var(--text); margin: 0 0 8px 0; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+      <span style="color: var(--accent);">⚡</span> Today's Live Trends (Day {{ movie.today_live.day_number or '—' }})
+    </h3>
+    {% if movie.today_live.quick_summary %}
+      <p style="margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5;">{{ movie.today_live.quick_summary }}</p>
+    {% endif %}
+
+    <div class="occ-grid">
+      <div class="occ-box">
+        <div class="occ-box-label">Morning</div>
+        <div class="occ-box-val">{{ movie.today_live.morning_occ or '—' }}</div>
+      </div>
+      <div class="occ-box">
+        <div class="occ-box-label">Afternoon</div>
+        <div class="occ-box-val">{{ movie.today_live.afternoon_occ or '—' }}</div>
+      </div>
+      <div class="occ-box">
+        <div class="occ-box-label">Evening</div>
+        <div class="occ-box-val">{{ movie.today_live.evening_occ or '—' }}</div>
+      </div>
+      <div class="occ-box">
+        <div class="occ-box-label">Est. Day Net</div>
+        <div class="occ-box-val" style="color: #16a34a;">₹{{ movie.today_live.current_estimate or '—' }} Cr</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Key Totals Grid -->
+  <div class="metrics-grid">
+    <div class="metric-box">
+      <span class="metric-box-label">India Net</span>
+      <div class="metric-box-val">₹{{ movie.totals.india_net if movie.totals else (movie.total_india_nett or movie.india_nett or '—') }} Cr</div>
+    </div>
+    <div class="metric-box">
+      <span class="metric-box-label">India Gross</span>
+      <div class="metric-box-val">₹{{ movie.totals.india_gross if movie.totals else (movie.total_india_gross or movie.india_gross or '—') }} Cr</div>
+    </div>
+    <div class="metric-box">
+      <span class="metric-box-label">Overseas Gross</span>
+      <div class="metric-box-val">₹{{ movie.totals.overseas_gross if movie.totals else (movie.total_overseas or movie.overseas or '—') }} Cr</div>
+    </div>
+    <div class="metric-box">
+      <span class="metric-box-label">Worldwide Total</span>
+      <div class="metric-box-val" style="color: var(--accent);">₹{{ movie.totals.worldwide_gross if movie.totals else (movie.total_worldwide or movie.total_collection or '—') }} Cr</div>
+    </div>
+  </div>
+
+  <!-- Day-Wise Breakdown Section -->
+  <div style="margin-top: 10px; margin-bottom: 40px;">
+    <div class="section-head" style="margin-bottom: 12px;">
+      <h2>Day-Wise Collection Breakdown</h2>
+      <div class="line"></div>
+    </div>
+
+    <div class="breakdown-table-wrap">
+      <table class="breakdown-table">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Date</th>
+            <th>India Net</th>
+            <th>Worldwide Gross</th>
+            <th>Occupancy</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set rows = movie.daily_breakdown or movie.daily_data %}
+          {% if rows and rows|length > 0 %}
+            {% for day_row in rows %}
+            <tr>
+              <td style="font-weight: 700;">
+                Day {{ day_row.day or day_row.day_number }} {% if day_row.day_name %}<span style="color:var(--muted);font-weight:normal;font-size:12px;">({{ day_row.day_name }})</span>{% endif %}
+              </td>
+              <td style="color: var(--muted);">{{ day_row.date or '—' }}</td>
+              <td style="color: #16a34a; font-weight: 700;">₹{{ day_row.india_net or day_row.india_nett or '—' }} Cr</td>
+              <td style="font-weight: 700; color: var(--text);">₹{{ day_row.worldwide_gross or day_row.worldwide or '—' }} Cr</td>
+              <td style="color: var(--muted);">{{ day_row.occupancy or '—' }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--muted); padding: 24px;">
+                No day-by-day collection data recorded yet.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

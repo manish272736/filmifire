@@ -163,7 +163,6 @@
 /* ── Box Office / Reviews Card ────────────────────────────────────────── */
 .bo-card {
   flex-shrink: 0;
-  /* Exactly 4 cards visible on desktop */
   width: calc((100% - 42px) / 4);
   min-width: calc((100% - 42px) / 4);
   background: var(--surface);
@@ -181,8 +180,9 @@
   border-color: rgba(230,126,34,0.4);
 }
 .bo-card-thumb {
+  position: relative;
   width: 100%;
-  height: 112px;
+  height: 120px;
   overflow: hidden;
   background: var(--surface2);
   flex-shrink: 0;
@@ -228,6 +228,52 @@
   margin-top: auto;
 }
 
+/* Tracker live badge on card */
+.bo-live-pill {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.75);
+  color: #2ecc71;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.bo-live-dot {
+  width: 5px;
+  height: 5px;
+  background: #2ecc71;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Tracker Collection Footer */
+.bo-card-collection {
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.bo-card-collection-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.bo-card-collection-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
 /* ── Mobile layout + 2.5 Cards + Buttons fix ─────────────────────────── */
 @media(max-width:768px){
   .home-layout { overflow-x: hidden; max-width: 100vw; width: 100%; }
@@ -256,7 +302,6 @@
   .bo-card-thumb { height: 95px; }
   .bo-card-title { font-size: 12px; }
 
-  /* Keep scroll buttons visible on mobile */
   .bo-strip-arrow-btn {
     display: flex !important;
   }
@@ -303,7 +348,7 @@
       </div>
       {% endif %}
 
-      <!-- 2. Reviews Strip (NOW TOP) -->
+      <!-- 2. Reviews Strip (TOP) -->
       {% if reviews_articles and reviews_articles|length > 0 %}
       <div class="bo-strip-wrap">
         <div class="section-head">
@@ -386,14 +431,14 @@
         </a>
       </div>
 
-      <!-- 4. Box Office Strip (NOW BOTTOM) -->
-      {% if boxoffice_articles and boxoffice_articles|length > 0 %}
+      <!-- 4. Live Box Office Trackers Strip (BOTTOM) -->
+      {% if trackers and trackers|length > 0 %}
       <div class="bo-strip-wrap">
         <div class="section-head">
           <h2>Box Office</h2>
           <div class="line"></div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-            <a href="{{ url_for('main.category', slug='box-office') }}"
+            <a href="{{ url_for('main.box_office_hub') }}"
                style="font-size:12px;color:var(--muted);text-transform:uppercase;
                       letter-spacing:0.08em;text-decoration:none;white-space:nowrap;">See all</a>
             <button class="bo-strip-arrow-btn" onclick="boScroll(-1)" aria-label="Scroll left">&#8249;</button>
@@ -402,18 +447,24 @@
         </div>
         <div class="bo-strip-outer">
           <div class="bo-strip-scroll" id="bo-strip-scroll">
-            {% for art in boxoffice_articles %}
-            <a href="{{ url_for('main.article', slug=art.slug) }}" class="bo-card">
+            {% for movie in trackers %}
+            <a href="{{ url_for('main.tracker_detail', slug=movie.slug) }}" class="bo-card">
               <div class="bo-card-thumb">
-                {% if art.cover_img %}
-                  <img src="{{ art.cover_img }}" alt="{{ art.title }}" loading="lazy">
+                {% if movie.poster_url or movie.image_url or movie.cover_img %}
+                  <img src="{{ movie.poster_url or movie.image_url or movie.cover_img }}" alt="{{ movie.title }}" loading="lazy">
                 {% else %}
                   <div class="bo-card-thumb-placeholder">📊</div>
                 {% endif %}
+                <span class="bo-live-pill">
+                  <span class="bo-live-dot"></span> LIVE
+                </span>
               </div>
               <div class="bo-card-body">
-                <div class="bo-card-title">{{ art.title }}</div>
-                <div class="bo-card-meta">{{ art | cardtime }}</div>
+                <div class="bo-card-title">{{ movie.title }}</div>
+                <div class="bo-card-collection">
+                  <span class="bo-card-collection-label">Worldwide</span>
+                  <span class="bo-card-collection-val">₹{{ movie.total_worldwide or movie.total_collection or '—' }} Cr</span>
+                </div>
               </div>
             </a>
             {% endfor %}
@@ -501,6 +552,7 @@
 
   </div>
 </div>
+{% endblock %}
 
 {% block extra_js %}
 <script>
@@ -629,6 +681,4 @@ window.revScroll = function (dir) {
   if (el) el.scrollBy({ left: dir * (el.clientWidth + 14), behavior: 'smooth' });
 };
 </script>
-{% endblock %}
-
 {% endblock %}

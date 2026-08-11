@@ -10,10 +10,10 @@
     .admin-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:12px; }
     .admin-logo { font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--accent); }
     .admin-logo span { color:var(--muted); font-size:14px; font-family:var(--font-body); margin-left:8px; }
-    .admin-actions { display:flex; gap:10px; align-items:center; }
+    .admin-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .btn { padding:8px 18px; border-radius:var(--radius); font-size:13px; font-weight:500; cursor:pointer; border:none; font-family:var(--font-body); transition:opacity 0.15s; text-decoration:none; display:inline-block; }
     .btn:hover { opacity:0.85; }
-    .btn-primary { background:var(--accent); color:#000; }
+    .btn-primary { background:var(--accent); color:#000; font-weight: 600; }
     .btn-ghost { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
     .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
     .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
@@ -28,6 +28,7 @@
     .act-btn { font-size:12px; color:var(--muted); padding:4px 10px; border:1px solid var(--border); border-radius:3px; cursor:pointer; background:none; font-family:var(--font-body); transition:color 0.15s, border-color 0.15s; text-decoration:none; display:inline-block; margin-right:4px; }
     .act-btn:hover { color:var(--accent); border-color:var(--accent); }
     .act-btn.del:hover { color:#e74c3c; border-color:#e74c3c; }
+    
     /* Push notification panel */
     .notif-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:28px; }
     .notif-panel-title { font-size:13px; font-weight:500; color:var(--text); margin-bottom:14px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
@@ -55,6 +56,7 @@
     </div>
     <div class="admin-actions">
       <a href="{{ url_for('main.index') }}" class="btn btn-ghost" target="_blank">View site →</a>
+      <a href="{{ url_for('admin.new_tracker') }}" class="btn btn-ghost" style="border-color: var(--accent); color: var(--accent);">⚡ + New Live Tracker</a>
       <a href="{{ url_for('admin.new_article') }}" class="btn btn-primary">+ New Article</a>
       <a href="{{ url_for('admin.logout') }}" class="btn btn-ghost">Logout</a>
     </div>
@@ -108,6 +110,63 @@
       <button class="btn-notify" onclick="sendNotification()">Send 🚀</button>
     </div>
     <div id="notif-status"></div>
+  </div>
+
+  <!-- Box Office Trackers Section -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:32px;">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:600;display:flex;justify-content:space-between;align-items:center;">
+      <span>⚡ Live Box Office Trackers</span>
+      <a href="{{ url_for('admin.new_tracker') }}" style="font-size:12px;color:var(--accent);text-decoration:none;">+ Create Tracker</a>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="articles-table">
+        <thead>
+          <tr>
+            <th>Movie</th>
+            <th>Language</th>
+            <th>India Net</th>
+            <th>Worldwide Gross</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tr in trackers %}
+          <tr>
+            <td style="max-width:280px;display:flex;align-items:center;gap:10px;">
+              {% if tr.poster_url %}
+                <img src="{{ tr.poster_url }}" alt="" style="width:32px;height:44px;object-fit:cover;border-radius:3px;">
+              {% endif %}
+              <strong>{{ tr.title }}</strong>
+            </td>
+            <td><span class="badge" style="font-size:10px;background:var(--surface2);border:1px solid var(--border);padding:2px 6px;border-radius:3px;">{{ tr.language or 'Hindi' }}</span></td>
+            <td style="font-weight:600;color:var(--accent)">₹{{ "%.2f"|format(tr.total_india_net or 0) }} Cr</td>
+            <td style="color:var(--text)">₹{{ "%.2f"|format(tr.total_worldwide_gross or 0) }} Cr</td>
+            <td>
+              {% if tr.is_active %}
+                <span class="status-pub">● Tracking Live</span>
+              {% else %}
+                <span class="status-draft">○ Closed</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ url_for('admin.edit_tracker', tracker_id=tr._id) }}" class="act-btn" style="color:var(--accent);border-color:var(--accent);">Update Numbers</a>
+              <a href="{{ url_for('main.tracker_detail', slug=tr.slug) }}" class="act-btn" target="_blank">View Live</a>
+              <form method="POST" action="{{ url_for('admin.delete_tracker', tracker_id=tr._id) }}" style="display:inline" onsubmit="return confirm('Delete this tracker?')">
+                <button type="submit" class="act-btn del">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align:center;color:var(--muted);padding:30px">
+              No movie trackers created yet. <a href="{{ url_for('admin.new_tracker') }}" style="color:var(--accent)">Add your first movie tracker →</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Articles table -->
@@ -216,10 +275,8 @@ async function sendNotification() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, body, url })
     });
-    // Show HTTP status for debugging
     if (!resp.ok) {
       const text = await resp.text();
-      // Try parse as JSON first
       try {
         const errData = JSON.parse(text);
         status.textContent = '✗ Server error ' + resp.status + ': ' + (errData.error || text.substring(0, 200));
