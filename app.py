@@ -67,14 +67,26 @@ def create_app():
                 pass
         abort(404)
 
+    # ── Manual Sync Route for Debugging ───────────────────────────────────
+    @app.route('/admin/sync', methods=['POST'])
+    def manual_sync():
+        try:
+            print("--- Manual Sync Started ---")
+            sync_active_trackers(app)
+            print("--- Manual Sync Finished ---")
+            return {"status": "success", "message": "Manual sync completed."}, 200
+        except Exception as e:
+            print(f"!!! Manual Sync Failed: {e}")
+            return {"status": "error", "message": str(e)}, 500
+
     # ── Register Blueprints ───────────────────────────────────────────────
     from blueprints.main import main_bp
     from blueprints.admin import admin_bp
-    from blueprints.tracker import tracker_bp  # <-- Imported your new tracker blueprint
+    from blueprints.tracker import tracker_bp  # <-- Tracker blueprint imported
 
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp, url_prefix="/admin")
-    app.register_blueprint(tracker_bp, url_prefix="/box-office")  # <-- Registered with the proper prefix
+    app.register_blueprint(tracker_bp, url_prefix="/box-office")  # <-- Registered with /box-office prefix[cite: 5]
 
     # ── Context Processor ─────────────────────────────────────────────────
     @app.context_processor
@@ -100,7 +112,7 @@ def create_app():
     if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         scheduler = BackgroundScheduler(timezone="Asia/Kolkata")
         
-        # Runs at 09:30 AM, 02:30 PM, 07:00 PM, and 11:00 PM IST
+        # Runs at 09:30 AM, 02:30 PM, 07:00 PM, and 11:00 PM IST[cite: 5]
         scheduler.add_job(
             func=lambda: sync_active_trackers(app),
             trigger='cron',

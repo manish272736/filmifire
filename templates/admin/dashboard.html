@@ -56,11 +56,15 @@
     </div>
     <div class="admin-actions">
       <a href="{{ url_for('main.index') }}" class="btn btn-ghost" target="_blank">View site →</a>
+      <button id="triggerSyncBtn" onclick="triggerManualSync()" class="btn btn-ghost" style="border-color: var(--accent); color: var(--accent);">🔄 Sync Trackers</button>
       <a href="{{ url_for('admin.new_tracker') }}" class="btn btn-ghost" style="border-color: var(--accent); color: var(--accent);">⚡ + New Live Tracker</a>
       <a href="{{ url_for('admin.new_article') }}" class="btn btn-primary">+ New Article</a>
       <a href="{{ url_for('admin.logout') }}" class="btn btn-ghost">Logout</a>
     </div>
   </div>
+  
+  <!-- Sync Status Notification banner -->
+  <div id="syncFeedback" style="display: none; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px; font-size:13px;"></div>
 
   <!-- Stats -->
   <div class="stats-row">
@@ -253,6 +257,40 @@ fetch('/admin/push-subscriber-count')
   }).catch(() => {
     document.getElementById('subscriber-count').textContent = '0 subscribers';
   });
+
+async function triggerManualSync() {
+    const btn = document.getElementById('triggerSyncBtn');
+    const feedback = document.getElementById('syncFeedback');
+    
+    btn.disabled = true;
+    btn.innerText = "🔄 Syncing...";
+    feedback.style.display = "block";
+    feedback.style.color = "var(--muted)";
+    feedback.innerText = "Executing box office sync script...";
+
+    try {
+        let response = await fetch('/admin/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        let data = await response.json();
+        
+        if (response.ok) {
+            feedback.style.color = "#27ae60";
+            feedback.innerText = "✅ " + data.message;
+            setTimeout(() => { window.location.reload(); }, 1500); // Reloads page to show updated numbers
+        } else {
+            feedback.style.color = "#e74c3c";
+            feedback.innerText = "❌ Error: " + (data.message || 'Sync failed');
+        }
+    } catch (err) {
+        feedback.style.color = "#e74c3c";
+        feedback.innerText = "❌ Network error occurred during sync request.";
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "🔄 Sync Trackers";
+    }
+}
 
 async function sendNotification() {
   const title = document.getElementById('notif-title').value.trim() || 'FilmiFire';

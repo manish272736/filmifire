@@ -10,6 +10,7 @@ import cloudinary
 import cloudinary.uploader
 from flask import current_app
 from indexnow import ping_indexnow, ping_indexnow_bulk
+import requests
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -53,6 +54,22 @@ def parse_rating(val):
         return r if 0.5 <= r <= 5 else None
     except (TypeError, ValueError):
         return None
+
+def ping_google_sitemap():
+    """
+    Programmatically notifies Google to re-crawl your sitemap.xml immediately.
+    """
+    sitemap_url = "https://filmifire.com/sitemap.xml"
+    ping_url = f"https://www.google.com/ping?sitemap={sitemap_url}"
+    
+    try:
+        response = requests.get(ping_url, timeout=5)
+        if response.status_code == 200:
+            print("Successfully pinged Google sitemap.")
+        else:
+            print(f"Failed to ping Google sitemap. Status code: {response.status_code}")
+    except Exception as e:
+        print(f"Error pinging Google sitemap: {e}")
 
 # ── Login / Logout ────────────────────────────────────────────────────────────
 @admin_bp.route("/login", methods=["GET", "POST"])
@@ -165,6 +182,7 @@ def new_article():
 
         if status == "published":
             ping_indexnow(slug)
+            ping_google_sitemap()
 
         flash("Article saved!", "success")
         return redirect(url_for("admin.dashboard"))
@@ -245,6 +263,7 @@ def edit_article(article_id):
 
         if status == "published":
             ping_indexnow(art.get("slug", ""))
+            ping_google_sitemap()
 
         flash("Article updated!", "success")
         return redirect(url_for("admin.dashboard"))
@@ -361,7 +380,7 @@ def save_tracker(tracker_id):
         },
         "totals": {
             "india_net": round(total_india_net, 2),
-            "india_gross": round(total_ww_gross * 0.8, 2), # estimated or balanced representation
+            "india_gross": round(total_ww_gross * 0.8, 2),
             "overseas_gross": 0.0,
             "worldwide_gross": round(total_ww_gross, 2)
         },
@@ -375,6 +394,9 @@ def save_tracker(tracker_id):
     else:
         db.tracked_movies.update_one({"_id": ObjectId(tracker_id)}, {"$set": doc})
         flash(f"Box office tracker for '{title}' updated successfully!", "success")
+
+    # Automatically notify Google sitemap of updates
+    ping_google_sitemap()
 
     return redirect(url_for("admin.dashboard"))
 

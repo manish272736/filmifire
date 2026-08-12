@@ -10,7 +10,7 @@
     .admin-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:12px; }
     .admin-logo { font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--accent); }
     .admin-logo span { color:var(--muted); font-size:14px; font-family:var(--font-body); margin-left:8px; }
-    .admin-actions { display:flex; gap:10px; align-items:center; }
+    .admin-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .btn { padding:8px 18px; border-radius:var(--radius); font-size:13px; font-weight:500; cursor:pointer; border:none; font-family:var(--font-body); transition:opacity 0.15s; text-decoration:none; display:inline-block; }
     .btn:hover { opacity:0.85; }
     .btn-primary { background:var(--accent); color:#000; }
@@ -70,6 +70,16 @@
       <div style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;font-size:13px;color:{% if cat == 'error' %}#e74c3c{% else %}var(--accent){% endif %}">{{ msg }}</div>
     {% endfor %}
   {% endwith %}
+
+  <!-- Live Box Office Trackers Section with Sync Button -->
+  <div style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <div style="font-family: var(--font-display); font-size: 18px; font-weight: 700;">⚡ Live Box Office Trackers</div>
+    <div>
+      <!-- Manual Sync Button positioned here -->
+      <button type="button" onclick="triggerManualSync()" class="btn btn-ghost" id="sync-btn" style="margin-right: 8px;">🔄 Sync Box Office</button>
+      <a href="{{ url_for('admin.create_tracker') }}" class="btn btn-primary">+ Create Tracker</a>
+    </div>
+  </div>
 
   <!-- Articles table -->
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
@@ -141,5 +151,40 @@
   </div>
 
 </div>
+
+<!-- JavaScript to handle the manual sync action -->
+<script>
+function triggerManualSync() {
+    const btn = document.getElementById('sync-btn');
+    btn.innerText = "Syncing...";
+    btn.style.opacity = "0.6";
+    btn.disabled = true;
+
+    fetch('/admin/sync', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json().then(data => ({ status: response.status, body: data })))
+    .then(res => {
+        if (res.status === 200) {
+            alert("Success: " + res.body.message);
+            location.reload(); // Refresh to see updated collections
+        } else {
+            alert("Error: " + (res.body.message || "Unknown error occurred"));
+        }
+    })
+    .catch(err => {
+        console.error('Sync error:', err);
+        alert("Failed to connect to the server for syncing.");
+    })
+    .finally(() => {
+        btn.innerText = "🔄 Sync Box Office";
+        btn.style.opacity = "1";
+        btn.disabled = false;
+    });
+}
+</script>
 </body>
 </html>
