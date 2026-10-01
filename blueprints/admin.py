@@ -616,4 +616,4 @@ def upload_image():
         )
         return jsonify({"url": result.get("secure_url", "")})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500aa
