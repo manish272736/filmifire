@@ -10,24 +10,33 @@
     .editor-wrap { max-width:900px; margin:0 auto; padding:32px 24px 80px; }
     .editor-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; flex-wrap:wrap; gap:12px; }
     .editor-logo { font-family:var(--font-display); font-size:18px; font-weight:800; color:var(--accent); }
+
     .field { margin-bottom:20px; }
     .field label { display:block; font-size:11px; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.08em; font-weight:500; }
     .field input, .field select, .field textarea {
       width:100%; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
       padding:10px 14px; color:var(--text); font-family:var(--font-body); font-size:14px; outline:none;
     }
-    .field input:focus, .field select:focus, .field textarea:focus { border-color:rgba(255,255,255,0.25); }
-    .field select option { background:#1c1c1f; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--border-strong); }
+    .field select option { background:var(--surface); color:var(--text); }
     .field textarea { resize:vertical; min-height:80px; }
     .field-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-    .check-row { display:flex; align-items:center; gap:8px; font-size:14px; }
-    .check-row input[type=checkbox] { width:16px; height:16px; cursor:pointer; accent-color:var(--accent); }
+    .field-hint { font-size:12px; color:var(--muted); margin-top:6px; font-family:var(--font-mono); }
+
+    /* Checkbox rows (must beat ".field label") */
+    .field label.check-row {
+      display:flex; align-items:center; gap:8px; margin-bottom:0;
+      font-size:14px; color:var(--text); text-transform:none; letter-spacing:0; font-weight:400; cursor:pointer;
+    }
+    .check-row input[type=checkbox] { width:16px; height:16px; padding:0; cursor:pointer; accent-color:var(--accent); flex-shrink:0; }
+
     .btn { padding:9px 20px; border-radius:var(--radius); font-size:14px; font-weight:500; cursor:pointer; border:none; font-family:var(--font-body); transition:opacity 0.15s; text-decoration:none; display:inline-block; }
     .btn:hover { opacity:0.85; }
     .btn-primary { background:var(--accent); color:#000; }
     .btn-ghost { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
     .btn-danger { background:#c0392b; color:#fff; }
-    /* Quill dark theme overrides */
+
+    /* ── Quill theme overrides ─────────────────────────────────────────── */
     .ql-toolbar { background:var(--surface2) !important; border:1px solid var(--border) !important; border-radius:var(--radius) var(--radius) 0 0 !important; }
     .ql-container { background:var(--surface) !important; border:1px solid var(--border) !important; border-top:none !important; border-radius:0 0 var(--radius) var(--radius) !important; min-height:360px; font-family:var(--font-body); font-size:16px; }
     .ql-editor { color:var(--text) !important; min-height:360px; line-height:1.7; }
@@ -36,11 +45,65 @@
     .ql-toolbar .ql-fill { fill:var(--muted) !important; }
     .ql-toolbar button:hover .ql-stroke, .ql-toolbar button.ql-active .ql-stroke { stroke:var(--accent) !important; }
     .ql-toolbar .ql-picker { color:var(--muted) !important; }
-    .ql-toolbar .ql-picker-options { background:var(--surface2) !important; border-color:var(--border) !important; }
+    .ql-toolbar .ql-picker-options { background:var(--surface) !important; border-color:var(--border) !important; }
+    .ql-snow .ql-picker-options .ql-picker-item { color:var(--text); }
+    .ql-snow .ql-tooltip { background:var(--surface); color:var(--text); border:1px solid var(--border); box-shadow:0 6px 20px rgba(0,0,0,0.15); z-index:50; }
+    .ql-snow .ql-tooltip input[type=text] { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+
+    /* Images inside the editor (same classes as the public article page) */
+    .ql-editor img { max-width:100%; height:auto; display:block; margin:12px auto; cursor:pointer; border-radius:var(--radius); }
+    .ql-editor img.img-small  { max-width:35%; }
+    .ql-editor img.img-medium { max-width:60%; }
+    .ql-editor img.img-left   { float:left;  margin:8px 20px 8px 0; max-width:45%; }
+    .ql-editor img.img-right  { float:right; margin:8px 0 8px 20px; max-width:45%; }
+    .ql-editor iframe.ql-video { width:100%; aspect-ratio:16/9; height:auto; border:none; border-radius:var(--radius); }
+
+    /* Tables inside the editor */
+    .ql-editor table { border-collapse:collapse; width:100%; margin:16px 0; table-layout:fixed; }
+    .ql-editor td { border:1px solid var(--border-strong); padding:8px 10px; vertical-align:top; word-break:break-word; min-width:40px; }
+    .ql-editor tr:first-child td { font-weight:600; background:var(--surface2); }
+
+    /* Social embed placeholder (real markup is generated on save) */
+    .ql-editor .social-embed { margin:14px 0; }
+    .se-card { display:flex; align-items:center; gap:12px; padding:14px 16px; border:1px dashed var(--accent); border-radius:var(--radius); background:var(--surface2); user-select:none; }
+    .se-icon { font-size:22px; line-height:1; }
+    .se-title { font-size:14px; font-weight:600; color:var(--text); }
+    .se-url { font-size:12px; color:var(--muted); font-family:var(--font-mono); word-break:break-all; }
+
+    /* Editor action buttons */
+    .editor-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .tool-btn {
+      background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius);
+      padding:6px 16px; font-size:13px; font-family:var(--font-body); color:var(--muted); cursor:pointer; transition:color 0.15s;
+    }
+    .tool-btn:hover { color:var(--accent); }
+    .table-tools { display:none; gap:6px; flex-wrap:wrap; margin-top:8px; }
+    .table-tools button {
+      background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius);
+      padding:5px 12px; font-size:12px; font-family:var(--font-body); color:var(--muted); cursor:pointer;
+    }
+    .table-tools button:hover { color:var(--accent); }
+    .table-tools button.danger:hover { color:#c0392b; }
+    .editor-tip { font-size:12px; color:var(--muted); margin-top:10px; line-height:1.5; }
+
+    /* Cover image */
     .cover-preview { width:100%; max-height:180px; object-fit:cover; border-radius:var(--radius); margin-top:10px; border:1px solid var(--border); display:none; }
     .img-url-row { display:flex; gap:8px; }
     .img-url-row input { flex:1; }
-    @media(max-width:600px){ .field-row{grid-template-columns:1fr;} }
+
+    /* Embed modal */
+    .modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; }
+    .modal-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:28px; width:480px; max-width:90vw; }
+    .modal-title { font-size:15px; font-weight:600; margin-bottom:6px; color:var(--text); }
+    .modal-sub { font-size:12px; color:var(--muted); margin-bottom:16px; }
+    .modal-card input[type=text] {
+      width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:6px;
+      padding:10px 14px; color:var(--text); font-size:14px; outline:none; margin-bottom:8px; font-family:var(--font-body);
+    }
+    .modal-status { font-size:12px; color:var(--muted); min-height:18px; margin-bottom:14px; }
+    .modal-actions { display:flex; gap:10px; }
+
+    @media(max-width:600px){ .field-row{grid-template-columns:1fr;} .editor-wrap{padding:24px 14px 80px;} }
   </style>
 </head>
 <body>
@@ -57,7 +120,7 @@
 
     <!-- Title -->
     <div class="field">
-      <label>Headline *</label>
+      <label for="title-input">Headline *</label>
       <input type="text" name="title" id="title-input" required
              placeholder="e.g. Dhurandhar crosses ₹300 Cr — every record it broke"
              value="{{ article.title if article else '' }}">
@@ -65,16 +128,17 @@
 
     <!-- Excerpt -->
     <div class="field">
-      <label>Excerpt (shown in cards & meta description)</label>
-      <textarea name="excerpt" rows="2"
+      <label for="excerpt-input">Excerpt (shown in cards &amp; meta description)</label>
+      <textarea name="excerpt" id="excerpt-input" rows="2"
                 placeholder="Short summary for Google and article cards (150–160 chars)">{{ article.excerpt if article else '' }}</textarea>
+      <div class="field-hint" id="excerpt-count">0 / 160</div>
     </div>
 
     <!-- Category + Status -->
     <div class="field-row">
       <div class="field">
-        <label>Category *</label>
-        <select name="category" required>
+        <label for="category-select">Category *</label>
+        <select name="category" id="category-select" required>
           <option value="">— Select —</option>
           {% for cat in categories %}
             <option value="{{ cat.slug }}"
@@ -85,8 +149,8 @@
         </select>
       </div>
       <div class="field">
-        <label>Status</label>
-        <select name="status">
+        <label for="status-select">Status</label>
+        <select name="status" id="status-select">
           <option value="draft" {% if not article or article.status == 'draft' %}selected{% endif %}>Draft</option>
           <option value="published" {% if article and article.status == 'published' %}selected{% endif %}>Published</option>
         </select>
@@ -94,28 +158,33 @@
     </div>
 
     <!-- Author -->
+    {% set authors = ['Manish Kumar', 'Arun Tiwari', 'Neha Tiwari', 'FilmiFire Desk'] %}
+    {% set current_author = article.get('author') if article else '' %}
     <div class="field">
-      <label>Written By</label>
-      <select name="author">
+      <label for="author-select">Written By</label>
+      <select name="author" id="author-select">
         <option value="">— Select Author —</option>
-        <option value="Manish Kumar" {% if article and article.get('author') == 'Manish Kumar' %}selected{% endif %}>Manish Kumar</option>
-        <option value="Arun Tiwari" {% if article and article.get('author') == 'Arun Tiwari' %}selected{% endif %}>Arun Tiwari</option>
-        <option value="Neha Tiwari" {% if article and article.get('author') == 'Neha Tiwari' %}selected{% endif %}>Neha Tiwari</option>
-        <option value="FilmiFire Desk" {% if article and article.get('author') == 'FilmiFire Desk' %}selected{% endif %}>FilmiFire Desk</option>
+        {% for a in authors %}
+          <option value="{{ a }}" {% if current_author == a %}selected{% endif %}>{{ a }}</option>
+        {% endfor %}
+        {# Keep legacy authors that are no longer in the list, so editing doesn't silently wipe them #}
+        {% if current_author and current_author not in authors %}
+          <option value="{{ current_author }}" selected>{{ current_author }}</option>
+        {% endif %}
       </select>
     </div>
 
     <!-- Tags -->
     <div class="field">
-      <label>Tags (comma-separated movie/actor names)</label>
-      <input type="text" name="tags"
+      <label for="tags-input">Tags (comma-separated movie/actor names)</label>
+      <input type="text" name="tags" id="tags-input"
              placeholder="Dhurandhar, Ranveer Singh, Bollywood, box office"
              value="{{ article.tags | join(', ') if article and article.tags else '' }}">
     </div>
 
     <!-- Cover image -->
     <div class="field">
-      <label>Cover Image</label>
+      <label for="cover-url">Cover Image</label>
       <div class="img-url-row">
         <input type="text" name="cover_img_url" id="cover-url"
                placeholder="Paste image URL, or upload below"
@@ -125,7 +194,7 @@
       <div style="margin-top:8px">
         <input type="file" name="cover_img" accept="image/*" onchange="previewFile(this)">
       </div>
-      <img id="cover-preview" class="cover-preview"
+      <img id="cover-preview" class="cover-preview" alt="Cover preview"
            src="{{ article.cover_img if article and article.cover_img else '' }}"
            {% if article and article.cover_img %}style="display:block"{% endif %}>
     </div>
@@ -166,79 +235,83 @@
       </label>
     </div>
 
-    <!-- Rich text editor -->
     <!-- Review fields (for movie/series reviews) -->
+    {% set cur_rating = ((article.get('rating') or 0) | float) if article else 0 %}
+    {% set rating_opts = [(0.5, '½★'), (1, '★'), (1.5, '★½'), (2, '★★'), (2.5, '★★½'), (3, '★★★'), (3.5, '★★★½'), (4, '★★★★'), (4.5, '★★★★½'), (5, '★★★★★')] %}
     <div class="field" id="review-fields" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px">
       <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:500;margin-bottom:12px">⭐ Review Fields — only fill if this is a movie/series review</div>
       <div class="field-row">
         <div class="field" style="margin-bottom:0">
-          <label>Movie / Series Name</label>
-          <input type="text" name="movie_name"
+          <label for="movie-name">Movie / Series Name</label>
+          <input type="text" name="movie_name" id="movie-name"
                  placeholder="e.g. LIK: Love Insurance Kompany"
                  value="{{ article.get('movie_name', '') if article else '' }}">
         </div>
         <div class="field" style="margin-bottom:0">
-          <label>Your Rating (1–5)</label>
-          <select name="rating">
+          <label for="rating-select">Your Rating (0.5–5)</label>
+          <select name="rating" id="rating-select">
             <option value="">— No rating —</option>
-            <option value="0.5" {% if article and article.get('rating') == 0.5 %}selected{% endif %}>0.5 / 5 — ½★</option>
-            <option value="1" {% if article and article.get('rating') == 1 %}selected{% endif %}>1.0 / 5 — ★</option>
-            <option value="1.5" {% if article and article.get('rating') == 1.5 %}selected{% endif %}>1.5 / 5 — ★½</option>
-            <option value="2" {% if article and article.get('rating') == 2 %}selected{% endif %}>2.0 / 5 — ★★</option>
-            <option value="2.5" {% if article and article.get('rating') == 2.5 %}selected{% endif %}>2.5 / 5 — ★★½</option>
-            <option value="3" {% if article and article.get('rating') == 3 %}selected{% endif %}>3.0 / 5 — ★★★</option>
-            <option value="3.5" {% if article and article.get('rating') == 3.5 %}selected{% endif %}>3.5 / 5 — ★★★½</option>
-            <option value="4" {% if article and article.get('rating') == 4 %}selected{% endif %}>4.0 / 5 — ★★★★</option>
-            <option value="4.5" {% if article and article.get('rating') == 4.5 %}selected{% endif %}>4.5 / 5 — ★★★★½</option>
-            <option value="5" {% if article and article.get('rating') == 5 %}selected{% endif %}>5.0 / 5 — ★★★★★</option>
+            {% for val, stars in rating_opts %}
+              <option value="{{ val }}" {% if cur_rating == val %}selected{% endif %}>{{ '%.1f' % val }} / 5 — {{ stars }}</option>
+            {% endfor %}
           </select>
         </div>
       </div>
     </div>
 
+    <!-- Rich text editor -->
     <div class="field">
       <label>Article Body *</label>
       <div id="quill-editor">{{ article.body_html | safe if article and article.body_html else '' }}</div>
       <input type="hidden" name="body_html" id="body-html-input">
-      <!-- Embed button below editor -->
-      <button type="button" onclick="openEmbedModal()"
-        style="margin-top:8px;background:var(--surface2);border:1px solid var(--border);
-               border-radius:var(--radius);padding:6px 16px;font-size:13px;font-family:var(--font-body);
-               color:var(--muted);cursor:pointer;transition:color 0.15s">
-        📎 Embed Instagram / Twitter / YouTube at cursor
-      </button>
+
+      <div class="editor-actions">
+        <button type="button" class="tool-btn" onclick="openEmbedModal()">📎 Embed Instagram / Twitter / YouTube</button>
+        <button type="button" class="tool-btn" onclick="insertTable()">▦ Insert Table</button>
+      </div>
+
+      <div class="table-tools" id="table-tools">
+        <button type="button" onmousedown="event.preventDefault()" onclick="tbl('insertRowAbove')">+ Row above</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="tbl('insertRowBelow')">+ Row below</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="tbl('insertColumnLeft')">+ Column left</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="tbl('insertColumnRight')">+ Column right</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="tbl('deleteRow')">− Row</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="tbl('deleteColumn')">− Column</button>
+        <button type="button" class="danger" onmousedown="event.preventDefault()" onclick="tbl('deleteTable')">Delete table</button>
+      </div>
+
+      <div class="editor-tip">
+        Tip: paste a table straight from Excel / Google Sheets and it keeps its rows and columns.
+        Pasted screenshots are uploaded automatically. Click any image to resize, float, add alt text or remove it.
+        The first table row is shown as the header.
+      </div>
     </div>
 
     <!-- Submit buttons -->
     <div style="display:flex;gap:12px;margin-top:28px;flex-wrap:wrap">
-      <button type="submit" class="btn btn-primary" onclick="setBodyHtml()">
+      <button type="submit" class="btn btn-primary">
         {% if article %}Update Article{% else %}Save Article{% endif %}
       </button>
       <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost">Cancel</a>
       {% if article %}
         <a href="{{ url_for('main.article', slug=article.slug) }}"
-           class="btn btn-ghost" target="_blank">Preview →</a>
+           class="btn btn-ghost" target="_blank" rel="noopener">Preview →</a>
       {% endif %}
     </div>
 
-  </form></div>
+  </form>
+</div>
 
 <!-- Embed modal -->
-<div id="embed-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center">
-  <div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:28px;width:480px;max-width:90vw">
-    <div style="font-size:15px;font-weight:600;margin-bottom:6px;color:#1a1a1c">📎 Embed Post or Video</div>
-    <div style="font-size:12px;color:#888;margin-bottom:16px">Supports: Instagram post/reel, Twitter/X tweet, YouTube video</div>
-    <input id="embed-url-input" type="text" placeholder="Paste URL here…"
-      style="width:100%;background:#f5f4f0;border:1px solid #ccc;border-radius:6px;
-             padding:10px 14px;color:#1a1a1c;font-size:14px;outline:none;margin-bottom:8px;box-sizing:border-box">
-    <div id="embed-status" style="font-size:12px;color:#888;min-height:18px;margin-bottom:14px"></div>
-    <div style="display:flex;gap:10px">
-      <button onclick="insertEmbed()"
-        style="background:#c49a1a;color:#000;border:none;padding:9px 20px;border-radius:6px;
-               font-size:14px;font-weight:500;cursor:pointer">Insert</button>
-      <button onclick="closeEmbedModal()"
-        style="background:#eee;color:#555;border:1px solid #ccc;padding:9px 20px;
-               border-radius:6px;font-size:14px;cursor:pointer">Cancel</button>
+<div id="embed-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="embed-modal-title">
+  <div class="modal-card">
+    <div class="modal-title" id="embed-modal-title">📎 Embed Post or Video</div>
+    <div class="modal-sub">Supports: Instagram post/reel, Twitter/X post, YouTube video or Short</div>
+    <input id="embed-url-input" type="text" placeholder="Paste URL here…" autocomplete="off">
+    <div id="embed-status" class="modal-status"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-primary" onclick="insertEmbed()">Insert</button>
+      <button type="button" class="btn btn-ghost" onclick="closeEmbedModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -248,10 +321,102 @@
 
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script>
+// ══════════════════════════════════════════════════════════════════════════
+//  Custom Quill formats (registered BEFORE the editor is created)
+// ══════════════════════════════════════════════════════════════════════════
+const Delta      = Quill.import('delta');
+const BlockEmbed = Quill.import('blots/block/embed');
+const BaseImage  = Quill.import('formats/image');
+
+// 1) Image blot that remembers its size / float class.
+//    Quill's stock image format drops the class attribute, so sizes were lost
+//    every time an existing article was re-opened for editing.
+const IMG_CLASSES = ['img-small', 'img-medium', 'img-left', 'img-right'];
+
+class ImageBlot extends BaseImage {
+  static create(value) {
+    const isObj = value && typeof value === 'object';
+    const node  = super.create(isObj ? value.src : value);
+    if (isObj && value.cls) node.className = value.cls;
+    return node;
+  }
+  static value(node) {
+    const src = node.getAttribute('src');
+    const cls = IMG_CLASSES.filter(c => node.classList.contains(c)).join(' ');
+    return cls ? { src: src, cls: cls } : src;
+  }
+}
+Quill.register(ImageBlot, true);
+
+// 2) Instagram / Twitter embeds.
+//    The editor shows a placeholder card; the real <blockquote> markup is
+//    generated when the form is saved (see getCleanHtml). This keeps the
+//    third-party scripts from rewriting the editor DOM, and it survives
+//    re-opening the article.
+const SOCIAL_META = {
+  instagram: { icon: '📷', label: 'Instagram post' },
+  twitter:   { icon: '🐦', label: 'Post on X / Twitter' }
+};
+
+function renderEmbedPlaceholder(node, value) {
+  const meta = SOCIAL_META[value.platform] || SOCIAL_META.twitter;
+  node.textContent = '';
+  const card = document.createElement('div');
+  card.className = 'se-card';
+  const icon = document.createElement('span');
+  icon.className = 'se-icon';
+  icon.textContent = meta.icon;
+  const text = document.createElement('div');
+  const title = document.createElement('div');
+  title.className = 'se-title';
+  title.textContent = meta.label + ' (preview appears on the live page)';
+  const url = document.createElement('div');
+  url.className = 'se-url';
+  url.textContent = value.url;
+  text.appendChild(title);
+  text.appendChild(url);
+  card.appendChild(icon);
+  card.appendChild(text);
+  node.appendChild(card);
+}
+
+class SocialEmbed extends BlockEmbed {
+  static create(value) {
+    const node = super.create();
+    node.setAttribute('contenteditable', 'false');
+    node.setAttribute('data-platform', value.platform);
+    node.setAttribute('data-url', value.url);
+    renderEmbedPlaceholder(node, value);
+    return node;
+  }
+  static value(node) {
+    let platform = node.getAttribute('data-platform');
+    let url      = node.getAttribute('data-url');
+    const bq = node.querySelector('blockquote');
+    if (bq) {
+      if (!platform) platform = bq.classList.contains('instagram-media') ? 'instagram' : 'twitter';
+      if (!url) {
+        const links = bq.querySelectorAll('a');
+        url = bq.getAttribute('data-instgrm-permalink') ||
+              (links.length ? links[links.length - 1].getAttribute('href') : '') || '';
+      }
+    }
+    return { platform: platform || 'twitter', url: url || '' };
+  }
+}
+SocialEmbed.blotName  = 'socialEmbed';
+SocialEmbed.tagName   = 'DIV';
+SocialEmbed.className = 'social-embed';
+Quill.register(SocialEmbed);
+
+// ══════════════════════════════════════════════════════════════════════════
+//  Editor
+// ══════════════════════════════════════════════════════════════════════════
 const quill = new Quill('#quill-editor', {
   theme: 'snow',
   placeholder: 'Write your article here…',
   modules: {
+    table: true,
     toolbar: [
       [{ header: [2, 3, false] }],
       ['bold', 'italic', 'blockquote'],
@@ -262,144 +427,343 @@ const quill = new Quill('#quill-editor', {
   }
 });
 
-// ── Override image button to upload via Cloudinary ────────────────────────
+let lastRange = null;              // last known cursor position
+let dirty = false;                 // unsaved changes?
+let submitting = false;
+
+function endIndex() { return Math.max(0, quill.getLength() - 1); }
+function currentRange() {
+  return quill.getSelection() || lastRange || { index: endIndex(), length: 0 };
+}
+
+// ── Image upload (Cloudinary via /admin/upload-image) ─────────────────────
 const toolbar = quill.getModule('toolbar');
-toolbar.addHandler('image', function() {
+let pendingImgRange = null;
+
+toolbar.addHandler('image', function () {
+  pendingImgRange = currentRange();
   document.getElementById('quill-img-upload').click();
 });
 
-document.getElementById('quill-img-upload').addEventListener('change', async function() {
-  const file = this.files[0];
-  if (!file) return;
-  const statusEl = document.querySelector('.ql-toolbar');
+// The built-in video box needs an /embed/ URL, so send it through our embed modal instead.
+toolbar.addHandler('video', function () { openEmbedModal(); });
 
-  // Show loading indicator
+async function uploadImage(file, range) {
+  const bar = document.querySelector('.ql-toolbar');
   const loader = document.createElement('span');
-  loader.id = 'img-upload-loader';
   loader.textContent = ' Uploading image…';
   loader.style.cssText = 'font-size:12px;color:#888;margin-left:8px';
-  statusEl.appendChild(loader);
-
+  bar.appendChild(loader);
   try {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await fetch('/admin/upload-image', {
-      method: 'POST',
-      body: formData
-    });
-    const data = await response.json();
-    if (data.url) {
-      const range = quill.getSelection(true);
-      quill.insertEmbed(range.index, 'image', data.url);
-      quill.setSelection(range.index + 1);
-    } else {
-      alert('Upload failed: ' + (data.error || 'Unknown error'));
-    }
-  } catch(e) {
-    alert('Upload error: ' + e.message);
+    const res = await fetch('/admin/upload-image', { method: 'POST', body: formData, credentials: 'same-origin' });
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
+    if (!res.ok || !data.url) throw new Error(data.error || ('Server returned ' + res.status));
+    const idx = range ? range.index : endIndex();
+    quill.insertEmbed(idx, 'image', data.url, 'user');
+    quill.setSelection(idx + 1, 0, 'silent');
+  } catch (e) {
+    alert('Image upload failed: ' + e.message);
   } finally {
-    const l = document.getElementById('img-upload-loader');
-    if (l) l.remove();
-    this.value = '';
+    loader.remove();
   }
+}
+
+document.getElementById('quill-img-upload').addEventListener('change', async function () {
+  const file = this.files[0];
+  this.value = '';
+  if (file) await uploadImage(file, pendingImgRange);
 });
 
-// ── Embed modal ───────────────────────────────────────────────────────────
+// ── Embed modal (YouTube / Instagram / Twitter-X) ─────────────────────────
+let embedRange = null;
+
 function openEmbedModal() {
+  embedRange = currentRange();
   document.getElementById('embed-url-input').value = '';
   document.getElementById('embed-status').textContent = '';
   document.getElementById('embed-modal').style.display = 'flex';
-  setTimeout(() => document.getElementById('embed-url-input').focus(), 100);
+  setTimeout(() => document.getElementById('embed-url-input').focus(), 50);
 }
 
 function closeEmbedModal() {
   document.getElementById('embed-modal').style.display = 'none';
 }
 
-async function insertEmbed() {
-  const url = document.getElementById('embed-url-input').value.trim();
-  const status = document.getElementById('embed-status');
-  if (!url) { status.textContent = 'Please enter a URL.'; return; }
-  status.textContent = 'Processing…';
+function parseEmbedUrl(raw) {
+  let u;
+  try { u = new URL(/^https?:\/\//i.test(raw) ? raw : 'https://' + raw); } catch (e) { return null; }
+  const host = u.hostname.replace(/^(www\.|m\.|mobile\.)/, '');
 
-  const range = quill.getSelection(true);
-  const idx = range ? range.index : quill.getLength();
+  // YouTube: watch?v=, youtu.be/, /shorts/, /embed/, /live/
+  let id = null;
+  if (host === 'youtu.be') {
+    id = u.pathname.slice(1).split('/')[0];
+  } else if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
+    if (u.pathname === '/watch') {
+      id = u.searchParams.get('v');
+    } else {
+      const m = u.pathname.match(/^\/(?:shorts|embed|live|v)\/([^/?]+)/);
+      if (m) id = m[1];
+    }
+  }
+  if (id && /^[\w-]{11}$/.test(id)) return { type: 'youtube', id: id };
 
-  // YouTube
-  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  if (ytMatch) {
-    quill.insertEmbed(idx, 'video', 'https://www.youtube.com/embed/' + ytMatch[1]);
-    quill.insertText(idx + 1, '\n');
-    status.textContent = '✓ YouTube video embedded!';
-    setTimeout(closeEmbedModal, 800);
-    return;
+  // Instagram: /p/CODE, /reel/CODE, /tv/CODE (optionally prefixed by /username)
+  if (host === 'instagram.com') {
+    const m = u.pathname.match(/^\/(?:[^/]+\/)?(p|reels?|tv)\/([\w-]+)/);
+    if (m) {
+      const kind = m[1] === 'reels' ? 'reel' : m[1];
+      return { type: 'instagram', url: 'https://www.instagram.com/' + kind + '/' + m[2] + '/' };
+    }
   }
 
-  // Instagram
-  if (url.includes('instagram.com')) {
-    const html = '<div style="display:flex;justify-content:center;margin:20px 0"><blockquote class="instagram-media" data-instgrm-permalink="' + url + '" data-instgrm-version="14" style="max-width:540px;width:100%;border-radius:8px"><p><a href="' + url + '" target="_blank">View on Instagram</a></p></blockquote></div>';
-    const delta = quill.clipboard.convert({html: html});
-    quill.updateContents(delta, 'user');
-    if (window.instgrm) window.instgrm.Embeds.process();
-    status.textContent = '✓ Instagram post embedded!';
-    setTimeout(closeEmbedModal, 800);
-    return;
+  // Twitter / X: /user/status/ID
+  if (host === 'twitter.com' || host === 'x.com') {
+    const m = u.pathname.match(/^\/(\w+)\/status\/(\d+)/);
+    if (m) return { type: 'twitter', url: 'https://twitter.com/' + m[1] + '/status/' + m[2] };
   }
-
-  // Twitter / X
-  if (url.includes('twitter.com') || url.includes('x.com')) {
-    const html = '<div style="display:flex;justify-content:center;margin:20px 0"><blockquote class="twitter-tweet"><a href="' + url + '" target="_blank">View tweet</a></blockquote></div>';
-    const delta = quill.clipboard.convert({html: html});
-    quill.updateContents(delta, 'user');
-    if (window.twttr) window.twttr.widgets.load();
-    status.textContent = '✓ Tweet embedded!';
-    setTimeout(closeEmbedModal, 800);
-    return;
-  }
-
-  status.textContent = '✗ Unrecognised URL. Supported: YouTube, Instagram, Twitter/X';
+  return null;
 }
 
-document.getElementById('embed-modal').addEventListener('click', function(e) {
+function insertEmbed() {
+  const input  = document.getElementById('embed-url-input');
+  const status = document.getElementById('embed-status');
+  const raw = input.value.trim();
+  if (!raw) { status.textContent = 'Please enter a URL.'; return; }
+
+  const parsed = parseEmbedUrl(raw);
+  if (!parsed) {
+    status.textContent = '✗ Unrecognised link. Supported: YouTube, Instagram post/reel, Twitter/X post.';
+    return;
+  }
+  const idx = embedRange ? embedRange.index : endIndex();
+
+  if (parsed.type === 'youtube') {
+    quill.insertEmbed(idx, 'video', 'https://www.youtube.com/embed/' + parsed.id, 'user');
+    status.textContent = '✓ YouTube video embedded!';
+  } else {
+    quill.insertEmbed(idx, 'socialEmbed', { platform: parsed.type, url: parsed.url }, 'user');
+    status.textContent = parsed.type === 'instagram' ? '✓ Instagram post embedded!' : '✓ Post embedded!';
+  }
+  quill.setSelection(idx + 1, 0, 'silent');
+  setTimeout(closeEmbedModal, 600);
+}
+
+document.getElementById('embed-modal').addEventListener('click', function (e) {
   if (e.target === this) closeEmbedModal();
 });
-document.getElementById('embed-url-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') insertEmbed();
+document.getElementById('embed-url-input').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter')  { e.preventDefault(); insertEmbed(); }
   if (e.key === 'Escape') closeEmbedModal();
 });
 
-function setBodyHtml() {
-  document.getElementById('body-html-input').value = quill.root.innerHTML;
+// ── Tables ────────────────────────────────────────────────────────────────
+function isInTable(range) {
+  if (!range) return false;
+  const found = quill.getLine(range.index);
+  const line = found && found[0];
+  return !!(line && line.domNode && line.domNode.closest && line.domNode.closest('table'));
 }
 
+function insertTable() {
+  const range = currentRange();
+  if (isInTable(range)) { alert('Move the cursor outside the current table first.'); return; }
+  const rows = parseInt(prompt('Number of rows (including header):', '4'), 10);
+  if (!rows || rows < 1 || rows > 100) return;
+  const cols = parseInt(prompt('Number of columns:', '3'), 10);
+  if (!cols || cols < 1 || cols > 12) return;
+  quill.focus();
+  quill.setSelection(range.index, 0, 'silent');
+  quill.getModule('table').insertTable(rows, cols);
+}
+
+function tbl(action) {
+  if (action === 'deleteTable' && !confirm('Delete this whole table?')) return;
+  quill.focus();
+  quill.getModule('table')[action]();
+}
+
+// Show row/column tools only while the cursor is inside a table
+quill.on('selection-change', function (range) {
+  if (range) lastRange = range;
+  if (!range) return;
+  document.getElementById('table-tools').style.display = isInTable(range) ? 'flex' : 'none';
+});
+
+// Build a real table from tab-separated plain text (Excel / Notepad / terminals)
+function pasteTabSeparated(text, range) {
+  const lines = text.replace(/\r/g, '').split('\n');
+  while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+  const rows = lines.slice(0, 300).map(l => l.split('\t'));
+  const cols = Math.min(12, Math.max.apply(null, rows.map(r => r.length)));
+
+  const found  = quill.getLine(range.index);
+  const offset = found && found[1] ? found[1] : 0;
+  const delta  = new Delta().retain(range.index);
+  if (offset > 0) delta.insert('\n');            // start the table on its own line
+
+  rows.forEach(function (r) {
+    const rowId = 'row-' + Math.random().toString(36).slice(2, 6);
+    for (let c = 0; c < cols; c++) {
+      const cell = (r[c] || '').trim();
+      if (cell) delta.insert(cell);
+      delta.insert('\n', { table: rowId });
+    }
+  });
+  quill.updateContents(delta, 'user');
+  const t = quill.getModule('table');
+  if (t && t.balanceTables) t.balanceTables();
+}
+
+// ── Paste / drop handling (runs before Quill's own handlers) ──────────────
+const isImageFile = f => /^image\//.test(f.type);
+
+quill.container.addEventListener('paste', function (e) {
+  const cd = e.clipboardData;
+  if (!cd) return;
+  const html  = cd.getData('text/html') || '';
+  const text  = cd.getData('text/plain') || '';
+  const range = quill.getSelection();
+  if (!range) return;
+
+  // A real HTML table (Sheets, Excel, Word, websites) → Quill's table module handles it.
+  if (/<table[\s>]/i.test(html)) return;
+  // Pasting inside a table cell → let Quill do its normal thing.
+  if (isInTable(range)) return;
+
+  // Screenshot / image only → upload instead of embedding a giant base64 string.
+  const imgs = Array.from(cd.files || []).filter(isImageFile);
+  if (imgs.length && !text.trim()) {
+    e.preventDefault(); e.stopPropagation();
+    uploadImage(imgs[0], range);
+    return;
+  }
+
+  // Plain tab-separated text with 2+ lines → build a table.
+  const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim());
+  if (lines.length >= 2 && lines.every(l => l.indexOf('\t') !== -1)) {
+    e.preventDefault(); e.stopPropagation();
+    pasteTabSeparated(text, range);
+  }
+}, true);
+
+quill.container.addEventListener('drop', function (e) {
+  const files = Array.from((e.dataTransfer && e.dataTransfer.files) || []).filter(isImageFile);
+  if (!files.length) return;
+  e.preventDefault(); e.stopPropagation();
+  uploadImage(files[0], currentRange());
+}, true);
+
+// ── Clean HTML for saving ─────────────────────────────────────────────────
+function buildEmbedMarkup(platform, url) {
+  const bq = document.createElement('blockquote');
+  const a  = document.createElement('a');
+  a.setAttribute('href', url);
+  a.setAttribute('target', '_blank');
+  a.setAttribute('rel', 'noopener');
+  if (platform === 'instagram') {
+    bq.className = 'instagram-media';
+    bq.setAttribute('data-instgrm-permalink', url);
+    bq.setAttribute('data-instgrm-version', '14');
+    bq.setAttribute('style', 'max-width:540px;width:100%;margin:0 auto');
+    a.textContent = 'View this post on Instagram';
+  } else {
+    bq.className = 'twitter-tweet';
+    a.textContent = 'View post on X';
+  }
+  bq.appendChild(a);
+  return bq;
+}
+
+function getCleanHtml() {
+  const clone = quill.root.cloneNode(true);
+
+  // Swap embed placeholders for the real third-party markup
+  clone.querySelectorAll('.social-embed').forEach(function (el) {
+    const platform = el.getAttribute('data-platform');
+    const url = el.getAttribute('data-url');
+    el.removeAttribute('contenteditable');
+    el.textContent = '';
+    el.appendChild(buildEmbedMarkup(platform, url));
+  });
+
+  // Remove the selection outline left on a clicked image
+  clone.querySelectorAll('img').forEach(function (img) {
+    img.style.removeProperty('outline');
+    if (!img.getAttribute('style')) img.removeAttribute('style');
+  });
+
+  clone.querySelectorAll('.ql-cursor').forEach(n => n.remove());
+
+  // Drop trailing empty paragraphs
+  while (clone.lastElementChild && clone.lastElementChild.tagName === 'P' &&
+         clone.lastElementChild.innerHTML === '<br>') {
+    clone.removeChild(clone.lastElementChild);
+  }
+  return clone.innerHTML;
+}
+
+function setBodyHtml() {
+  document.getElementById('body-html-input').value = getCleanHtml();
+}
+
+// ── Cover image preview ───────────────────────────────────────────────────
+const coverPreview = document.getElementById('cover-preview');
+coverPreview.addEventListener('error', function () { this.style.display = 'none'; });
+
 function previewFromUrl(url) {
-  const img = document.getElementById('cover-preview');
-  if (url) { img.src = url; img.style.display = 'block'; }
-  else { img.style.display = 'none'; }
+  if (url) { coverPreview.src = url; coverPreview.style.display = 'block'; }
+  else { coverPreview.style.display = 'none'; }
 }
 
 function previewFile(input) {
   if (!input.files || !input.files[0]) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    const img = document.getElementById('cover-preview');
-    img.src = e.target.result;
-    img.style.display = 'block';
-  };
+  reader.onload = e => { coverPreview.src = e.target.result; coverPreview.style.display = 'block'; };
   reader.readAsDataURL(input.files[0]);
 }
 
-document.getElementById('article-form').addEventListener('submit', function() {
-  document.getElementById('body-html-input').value = quill.root.innerHTML;
+// ── Excerpt counter ───────────────────────────────────────────────────────
+const excerptEl = document.getElementById('excerpt-input');
+const excerptCount = document.getElementById('excerpt-count');
+function updateExcerptCount() {
+  const n = excerptEl.value.length;
+  excerptCount.textContent = n + ' / 160';
+  excerptCount.style.color = n > 160 ? 'var(--accent2)' : 'var(--muted)';
+}
+excerptEl.addEventListener('input', updateExcerptCount);
+updateExcerptCount();
+
+// ── Submit + unsaved-changes guard ────────────────────────────────────────
+document.getElementById('article-form').addEventListener('submit', function (e) {
+  if (quill.getLength() <= 1) {
+    e.preventDefault();
+    alert('Please write the article body before saving.');
+    quill.focus();
+    return;
+  }
+  setBodyHtml();
+  submitting = true;
 });
 
-// ── Image click toolbar ───────────────────────────────────────────────────
+quill.on('text-change', function (delta, old, source) { if (source === 'user') dirty = true; });
+document.querySelectorAll('#article-form input, #article-form select, #article-form textarea')
+  .forEach(el => el.addEventListener('input', () => { dirty = true; }));
+window.addEventListener('beforeunload', function (e) {
+  if (dirty && !submitting) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+//  Image click toolbar (size / float / alt text / remove)
+// ══════════════════════════════════════════════════════════════════════════
 const imgToolbar = document.createElement('div');
 imgToolbar.id = 'img-toolbar';
 imgToolbar.style.cssText = 'display:none;position:fixed;background:#1a1a1c;border-radius:6px;padding:5px 8px;gap:5px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.4);white-space:nowrap;align-items:center';
 
 const btnStyle = 'background:#444;color:#fff;border:none;border-radius:3px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:sans-serif;transition:background 0.1s';
-const hoverStyle = 'background:#666';
 
 function makeBtn(text, title, fn) {
   const b = document.createElement('button');
@@ -407,15 +771,14 @@ function makeBtn(text, title, fn) {
   b.title = title;
   b.type = 'button';
   b.style.cssText = btnStyle;
-  b.addEventListener('mouseenter', () => b.style.background = '#666');
-  b.addEventListener('mouseleave', () => b.style.background = '#444');
-  b.addEventListener('mousedown', function(e) {
+  b.addEventListener('mouseenter', () => { b.style.background = '#666'; });
+  b.addEventListener('mouseleave', () => { b.style.background = '#444'; });
+  b.addEventListener('mousedown', function (e) {
     e.preventDefault(); e.stopPropagation();
     fn();
   });
   return b;
 }
-
 function lbl(text) {
   const s = document.createElement('span');
   s.textContent = text;
@@ -430,57 +793,80 @@ function sep() {
 }
 
 imgToolbar.appendChild(lbl('Size'));
-imgToolbar.appendChild(makeBtn('S','Small ~35%', () => imgSize('img-small')));
-imgToolbar.appendChild(makeBtn('M','Medium ~60%', () => imgSize('img-medium')));
-imgToolbar.appendChild(makeBtn('F','Full width', () => imgSize('img-full')));
+imgToolbar.appendChild(makeBtn('S', 'Small ~35%',  () => imgSize('img-small')));
+imgToolbar.appendChild(makeBtn('M', 'Medium ~60%', () => imgSize('img-medium')));
+imgToolbar.appendChild(makeBtn('F', 'Full width',  () => imgSize('img-full')));
 imgToolbar.appendChild(sep());
 imgToolbar.appendChild(lbl('Float'));
-imgToolbar.appendChild(makeBtn('←','Float left — text wraps right', () => imgFloat('img-left')));
-imgToolbar.appendChild(makeBtn('→','Float right — text wraps left', () => imgFloat('img-right')));
-imgToolbar.appendChild(makeBtn('↔','Center, no float', () => imgFloat('')));
+imgToolbar.appendChild(makeBtn('←', 'Float left — text wraps right', () => imgFloat('img-left')));
+imgToolbar.appendChild(makeBtn('→', 'Float right — text wraps left', () => imgFloat('img-right')));
+imgToolbar.appendChild(makeBtn('↔', 'Center, no float',            () => imgFloat('')));
 imgToolbar.appendChild(sep());
+imgToolbar.appendChild(makeBtn('Alt', 'Edit alt text (good for SEO)', () => imgAlt()));
+imgToolbar.appendChild(makeBtn('✕', 'Remove image', () => imgRemove()));
 
 document.body.appendChild(imgToolbar);
 
 let selectedImg = null;
 
-document.querySelector('.ql-editor').addEventListener('mousedown', function(e) {
+function hideImgToolbar() {
+  imgToolbar.style.display = 'none';
+  if (selectedImg) { selectedImg.style.removeProperty('outline'); selectedImg = null; }
+}
+
+quill.root.addEventListener('mousedown', function (e) {
   if (e.target.tagName === 'IMG') {
     e.preventDefault();
+    quill.root.querySelectorAll('img').forEach(i => i.style.removeProperty('outline'));
     selectedImg = e.target;
     const rect = e.target.getBoundingClientRect();
     imgToolbar.style.display = 'flex';
-    // Position above the image
     let top = rect.top - 46;
     if (top < 8) top = rect.bottom + 6;
     imgToolbar.style.top = top + 'px';
     imgToolbar.style.left = Math.max(8, rect.left) + 'px';
-    // Highlight selected
-    document.querySelectorAll('.ql-editor img').forEach(i => i.style.outline = '');
     selectedImg.style.outline = '2px solid #c49a1a';
   }
 });
 
-document.addEventListener('mousedown', function(e) {
+document.addEventListener('mousedown', function (e) {
   if (imgToolbar.contains(e.target)) return;
-  if (e.target.tagName === 'IMG' && document.querySelector('.ql-editor').contains(e.target)) return;
-  imgToolbar.style.display = 'none';
-  if (selectedImg) { selectedImg.style.outline = ''; selectedImg = null; }
+  if (e.target.tagName === 'IMG' && quill.root.contains(e.target)) return;
+  hideImgToolbar();
 });
+window.addEventListener('scroll', hideImgToolbar, { passive: true });
+
+function imgChanged() { quill.update('user'); }
 
 function imgSize(cls) {
   if (!selectedImg) return;
-  selectedImg.classList.remove('img-small','img-medium','img-full');
+  selectedImg.classList.remove('img-small', 'img-medium', 'img-full');
   if (cls !== 'img-full') selectedImg.classList.add(cls);
+  imgChanged();
 }
 
 function imgFloat(cls) {
   if (!selectedImg) return;
-  selectedImg.classList.remove('img-left','img-right');
+  selectedImg.classList.remove('img-left', 'img-right');
   if (cls) selectedImg.classList.add(cls);
+  imgChanged();
 }
 
+function imgAlt() {
+  if (!selectedImg) return;
+  const val = prompt('Alt text (describe the image):', selectedImg.getAttribute('alt') || '');
+  if (val === null) return;
+  if (val.trim()) selectedImg.setAttribute('alt', val.trim());
+  else selectedImg.removeAttribute('alt');
+  imgChanged();
+}
 
+function imgRemove() {
+  if (!selectedImg) return;
+  const blot = Quill.find(selectedImg);
+  if (blot) quill.deleteText(quill.getIndex(blot), 1, 'user');
+  hideImgToolbar();
+}
 </script>
 </body>
 </html>
