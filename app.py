@@ -1,4 +1,6 @@
 import os
+import firebase_admin
+from firebase_admin import credentials
 from flask import Flask, redirect, request, send_from_directory, abort
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -13,6 +15,19 @@ def create_app():
     app.config.from_object(Config)
     app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50MB
     login_manager.init_app(app)
+
+    # ── Initialize Firebase Admin SDK ───────────────────────────────────────
+    if not firebase_admin._apps:
+        try:
+            cred_path = os.path.join(app.root_path, "fcm-service-account.json")
+            if os.path.exists(cred_path):
+                cred = credentials.Certificate(cred_path)
+                firebase_admin.initialize_app(cred)
+                print("--- Firebase Initialized Successfully ---")
+            else:
+                print(f"!!! Firebase JSON file not found at path: {cred_path}")
+        except Exception as e:
+            print(f"!!! Firebase Initialization Failed: {e}")
 
     # ── Lightweight Health Check Endpoint ─────────────────────────────────
     @app.route('/healthz')
@@ -53,10 +68,11 @@ def create_app():
     def ads_txt():
         return send_from_directory(app.static_folder, 'ads.txt')
 
-    # ── IndexNow key file ──────────────────────────────────────────────────
-    @app.route('/<key_file>')
+   # ── IndexNow key file ──────────────────────────────────────────────────
+    @app.route('/verify/')
     def indexnow_key(key_file):
-        if key_file.endswith('.txt') and key_file != 'robots.txt':
+        # Only allow verification text files and prevent directory traversal
+        if key_file and key_file.endswith('.txt') and key_file != 'robots.txt' and '/' not in key_file:
             try:
                 return send_from_directory(
                     app.static_folder, 
@@ -66,7 +82,7 @@ def create_app():
             except Exception:
                 pass
         abort(404)
-
+        
     # ── Manual Sync Route for Debugging ───────────────────────────────────
     @app.route('/admin/sync', methods=['POST'])
     def manual_sync():
@@ -86,7 +102,7 @@ def create_app():
 
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp, url_prefix="/admin")
-    app.register_blueprint(tracker_bp, url_prefix="/box-office")  # <-- Registered with /box-office prefix[cite: 5]
+    app.register_blueprint(tracker_bp, url_prefix="/box-office")  # <-- Registered with /box-office prefix
 
     # ── Context Processor ─────────────────────────────────────────────────
     @app.context_processor
@@ -112,7 +128,7 @@ def create_app():
     if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         scheduler = BackgroundScheduler(timezone="Asia/Kolkata")
         
-        # Runs at 09:30 AM, 02:30 PM, 07:00 PM, and 11:00 PM IST[cite: 5]
+        # Runs at 09:30 AM, 02:30 PM, 07:00 PM, and 11:00 PM IST
         scheduler.add_job(
             func=lambda: sync_active_trackers(app),
             trigger='cron',
