@@ -34,14 +34,6 @@ def create_app():
     def home_gone():
         abort(410)
 
-    #------monetag_service---------
-    @app.route("/sw.js")
-    def monetag_service_worker():
-        return send_from_directory(
-            app.static_folder,
-            "sw.js",
-            mimetype="application/javascript"
-        )
     # ── Serve Firebase SW from ROOT ────────────────────────────────────────
     @app.route('/firebase-messaging-sw.js')
     def firebase_sw():
