@@ -5,7 +5,7 @@ Place this file at: indexnow.py (project root, same level as app.py)
 Setup:
 1. Go to https://www.bing.com/indexnow and generate a key
 2. Replace INDEXNOW_KEY below with your actual key
-3. Create a file named <your-key>.txt in static/ folder containing just the key
+3. Create a file named .txt in static/ folder containing just the key
 4. Add INDEXNOW_KEY to your .env file
 """
 
@@ -34,7 +34,7 @@ def ping_indexnow(slug: str) -> bool:
             json={
                 "host": "filmifire.com",
                 "key": INDEXNOW_KEY,
-                "keyLocation": f"{SITE_URL}/{INDEXNOW_KEY}.txt",
+                "keyLocation": f"{SITE_URL}/verify/{INDEXNOW_KEY}.txt",
                 "urlList": [url]
             },
             headers={"Content-Type": "application/json"},
@@ -62,7 +62,7 @@ def ping_indexnow_bulk(slugs: list) -> dict:
             json={
                 "host": "filmifire.com",
                 "key": INDEXNOW_KEY,
-                "keyLocation": f"{SITE_URL}/{INDEXNOW_KEY}.txt",
+                "keyLocation": f"{SITE_URL}/verify/{INDEXNOW_KEY}.txt",
                 "urlList": urls
             },
             headers={"Content-Type": "application/json"},
